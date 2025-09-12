@@ -869,36 +869,37 @@ async function handleFileUpload(event) {
       }
       
       const uploadData = await urlResponse.json();
-      console.log('Step 1 complete. Upload URL response:', uploadData);
+      console.log('Step 1 complete. Upload data:', uploadData);
       
-      // Step 2: Upload the actual file to Google Cloud Storage
-      console.log(`Step 2: Uploading file to: ${uploadData.url}`);
+      // Step 2: Upload to Google Cloud Storage
+      console.log(`Step 2: Uploading ${file.size} bytes to GCS...`);
+      console.log('Upload URL:', uploadData.url);
       
       const fileUploadResponse = await fetch(uploadData.url, {
         method: 'PUT',
-        headers: {
-          'Content-Type': file.type || 'application/octet-stream'
-        },
-        body: file
+        body: file // Remove Content-Type header - let browser set it
       });
       
+      console.log('Upload response status:', fileUploadResponse.status);
+      console.log('Upload response headers:', [...fileUploadResponse.headers.entries()]);
+      
       if (!fileUploadResponse.ok) {
-        throw new Error(`Failed to upload file to storage: ${fileUploadResponse.status}`);
+        const errorText = await fileUploadResponse.text();
+        console.error('Upload error response:', errorText);
+        throw new Error(`Failed to upload file: ${fileUploadResponse.status} - ${errorText}`);
       }
       
-      console.log(`Step 2 complete. File uploaded successfully.`);
-      console.log(`Document should now be available in Vertesia with ID: ${uploadData.id}`);
+      console.log('Step 2 complete - file uploaded to GCS');
     }
     
-    // Refresh the document list for current client to show the new upload
-    await loadClientDocuments(currentClient);
+    // Refresh the document list
+    setTimeout(() => loadClientDocuments(currentClient), 1000); // Small delay to let GCS process
     alert(`Successfully uploaded ${files.length} file(s)`);
     
   } catch (error) {
     console.error('Upload error:', error);
     alert(`Upload failed: ${error.message}`);
   } finally {
-    // Reset upload area styling
     setTimeout(() => {
       uploadArea.style.background = '';
       uploadArea.style.borderColor = '';
