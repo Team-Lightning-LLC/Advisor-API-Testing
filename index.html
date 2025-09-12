@@ -849,9 +849,9 @@ async function handleFileUpload(event) {
       const clientName = clientsData[currentClient].name;
       const fileName = `${clientName} - ${file.name}`;
       
-      console.log(`Uploading: ${fileName}`);
+      console.log(`Step 1: Getting upload URL for: ${fileName}`);
       
-      // Step 1: Get upload URL
+      // Step 1: Get upload URL from Vertesia
       const urlResponse = await fetch('https://api.vertesia.io/api/v1/objects/upload-url', {
         method: 'POST',
         headers: {
@@ -869,11 +869,13 @@ async function handleFileUpload(event) {
       }
       
       const uploadData = await urlResponse.json();
-      console.log('Upload URL response:', uploadData);
+      console.log('Step 1 complete. Upload URL response:', uploadData);
       
-      // Step 2: Upload the actual file to the returned URL
+      // Step 2: Upload the actual file to Google Cloud Storage
+      console.log(`Step 2: Uploading file to: ${uploadData.url}`);
+      
       const fileUploadResponse = await fetch(uploadData.url, {
-        method: 'PUT', // or POST depending on what Vertesia expects
+        method: 'PUT',
         headers: {
           'Content-Type': file.type || 'application/octet-stream'
         },
@@ -881,25 +883,15 @@ async function handleFileUpload(event) {
       });
       
       if (!fileUploadResponse.ok) {
-        throw new Error(`Failed to upload file: ${fileUploadResponse.status}`);
+        throw new Error(`Failed to upload file to storage: ${fileUploadResponse.status}`);
       }
       
-      console.log(`Successfully uploaded: ${fileName}`);
-      
-      // Add to local document list
-      const newDoc = {
-        id: uploadData.id || Date.now() + Math.random(),
-        name: fileName.replace(/\.[^/.]+$/, ""),
-        date: new Date().toISOString().split('T')[0],
-        client: currentClient,
-        type: 'uploaded',
-        vertesiaId: uploadData.id
-      };
-      
-      documentsData.unshift(newDoc);
+      console.log(`Step 2 complete. File uploaded successfully.`);
+      console.log(`Document should now be available in Vertesia with ID: ${uploadData.id}`);
     }
     
-    renderDocuments();
+    // Refresh the document list for current client to show the new upload
+    await loadClientDocuments(currentClient);
     alert(`Successfully uploaded ${files.length} file(s)`);
     
   } catch (error) {
