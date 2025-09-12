@@ -873,27 +873,58 @@ async function handleFileUpload(event) {
       
       // Step 2: Upload to Google Cloud Storage
       console.log(`Step 2: Uploading ${file.size} bytes to GCS...`);
-      console.log('Upload URL:', uploadData.url);
       
       const fileUploadResponse = await fetch(uploadData.url, {
         method: 'PUT',
-        body: file // Remove Content-Type header - let browser set it
+        body: file
       });
       
       console.log('Upload response status:', fileUploadResponse.status);
-      console.log('Upload response headers:', [...fileUploadResponse.headers.entries()]);
       
       if (!fileUploadResponse.ok) {
         const errorText = await fileUploadResponse.text();
         console.error('Upload error response:', errorText);
-        throw new Error(`Failed to upload file: ${fileUploadResponse.status} - ${errorText}`);
+        throw new Error(`Failed to upload file: ${fileUploadResponse.status}`);
       }
       
       console.log('Step 2 complete - file uploaded to GCS');
+      
+      // Step 3: Create the content object in Vertesia
+      console.log('Step 3: Creating content object in Vertesia...');
+      
+      const createObjectResponse = await fetch('https://api.vertesia.io/api/v1/objects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9'
+        },
+        body: JSON.stringify({
+          "name": fileName,
+          "description": `Document uploaded for ${clientName}`,
+          "content": {
+            "source": `gs://store_prod_dd0d3a_2ca798/${uploadData.id}`, // Using the ID from step 1
+            "type": file.type || "application/pdf",
+            "name": file.name
+          },
+          "properties": {
+            "client": clientName,
+            "uploaded_at": new Date().toISOString()
+          }
+        })
+      });
+      
+      if (!createObjectResponse.ok) {
+        const errorText = await createObjectResponse.text();
+        console.error('Create object error:', errorText);
+        throw new Error(`Failed to create object: ${createObjectResponse.status}`);
+      }
+      
+      const createdObject = await createObjectResponse.json();
+      console.log('Step 3 complete - object created:', createdObject);
     }
     
     // Refresh the document list
-    setTimeout(() => loadClientDocuments(currentClient), 1000); // Small delay to let GCS process
+    setTimeout(() => loadClientDocuments(currentClient), 1000);
     alert(`Successfully uploaded ${files.length} file(s)`);
     
   } catch (error) {
