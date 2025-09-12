@@ -840,40 +840,77 @@ async function handleFileUpload(event) {
   const files = event.target.files;
   if (files.length === 0) return;
   
+  const uploadArea = document.querySelector('.upload-area');
+  uploadArea.style.background = '#fff3f6';
+  uploadArea.style.borderColor = '#8B1538';
+  
   try {
     for (const file of files) {
-      // Add client name prefix
       const clientName = clientsData[currentClient].name;
-      const response = await fetch('https://api.vertesia.io/api/v1/objects/upload-url', {
+      const fileName = `${clientName} - ${file.name}`;
+      
+      console.log(`Uploading: ${fileName}`);
+      
+      // Step 1: Get upload URL
+      const urlResponse = await fetch('https://api.vertesia.io/api/v1/objects/upload-url', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9'
         },
         body: JSON.stringify({
-          "name": `${clientName} - ${file.name}`,
+          "name": fileName,
           "mime_type": file.type || "application/pdf"
         })
       });
       
-      if (response.ok) {
-        const result = await response.json();
-        const newDoc = {
-          id: result.id || Date.now() + Math.random(),
-          name: `${clientName} - ${file.name.replace(/\.[^/.]+$/, "")}`,
-          date: new Date().toISOString().split('T')[0],
-          client: currentClient,
-          type: 'uploaded'
-        };
-        
-        documentsData.unshift(newDoc);
-        renderDocuments();
+      if (!urlResponse.ok) {
+        throw new Error(`Failed to get upload URL: ${urlResponse.status}`);
       }
+      
+      const uploadData = await urlResponse.json();
+      console.log('Upload URL response:', uploadData);
+      
+      // Step 2: Upload the actual file to the returned URL
+      const fileUploadResponse = await fetch(uploadData.url, {
+        method: 'PUT', // or POST depending on what Vertesia expects
+        headers: {
+          'Content-Type': file.type || 'application/octet-stream'
+        },
+        body: file
+      });
+      
+      if (!fileUploadResponse.ok) {
+        throw new Error(`Failed to upload file: ${fileUploadResponse.status}`);
+      }
+      
+      console.log(`Successfully uploaded: ${fileName}`);
+      
+      // Add to local document list
+      const newDoc = {
+        id: uploadData.id || Date.now() + Math.random(),
+        name: fileName.replace(/\.[^/.]+$/, ""),
+        date: new Date().toISOString().split('T')[0],
+        client: currentClient,
+        type: 'uploaded',
+        vertesiaId: uploadData.id
+      };
+      
+      documentsData.unshift(newDoc);
     }
+    
+    renderDocuments();
+    alert(`Successfully uploaded ${files.length} file(s)`);
+    
   } catch (error) {
     console.error('Upload error:', error);
-    alert('Upload failed. Please try again.');
+    alert(`Upload failed: ${error.message}`);
   } finally {
+    // Reset upload area styling
+    setTimeout(() => {
+      uploadArea.style.background = '';
+      uploadArea.style.borderColor = '';
+    }, 1000);
     event.target.value = '';
   }
 }
