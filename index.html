@@ -911,13 +911,17 @@ async function handleFileUpload(event) {
 // Generate document
 async function generateDocument() {
   const select = document.getElementById('docTypeSelect');
+  const selectedDocType = select.value; // Capture the value before any other operations
   
-  if (!select.value) {
+  if (!selectedDocType) {
     alert('Please select a document type');
     return;
   }
   
-  documentQueue.addGeneration(select.value, currentClient);
+  // Add to queue with the captured value
+  documentQueue.addGeneration(selectedDocType, currentClient);
+  
+  // Now reset the select
   select.value = '';
   
   try {
@@ -931,7 +935,7 @@ async function generateDocument() {
         "type": "conversation",
         "interaction": "AdvisorAssistant@2",
         "data": {
-          "task": `For ${clientsData[currentClient].name} create a ${select.value} document`
+          "task": `For ${clientsData[currentClient].name} create a ${selectedDocType} document`
         },
         "config": {
           "environment": "681915c6a01fb262a410c161",
@@ -939,6 +943,8 @@ async function generateDocument() {
         }
       })
     });
+    
+    console.log(`Document generation started: ${selectedDocType} for ${clientsData[currentClient].name}`);
   } catch (error) {
     console.error('API error:', error);
   }
