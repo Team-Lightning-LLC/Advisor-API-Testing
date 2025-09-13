@@ -740,6 +740,235 @@ dialog::backdrop {
   opacity: 0.5;
   cursor: not-allowed;
 }
+/* Add Client Button */
+.add-client-btn {
+  background: var(--maroon);
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+  margin-left: auto;
+  transition: all 0.2s ease;
+}
+
+.add-client-btn:hover {
+  background: var(--maroon2);
+  transform: scale(1.1);
+}
+
+/* Add Client CSS */
+#addClientModal {
+  width: min(600px, 90vw);
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  margin: auto;
+}
+
+#addClientModal::backdrop {
+  background: rgba(0,0,0,.6);
+}
+
+.add-client-modal-content {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.add-client-modal-header {
+  background: var(--maroon);
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.add-client-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.add-client-modal-body {
+  padding: 20px;
+}
+
+.client-name-section {
+  margin-bottom: 24px;
+}
+
+.client-name-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+#clientNameInput {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+#clientNameInput:focus {
+  outline: none;
+  border-color: var(--maroon);
+}
+
+.input-help {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.upload-section {
+  margin-bottom: 20px;
+}
+
+.upload-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.modal-upload-area {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  background: var(--soft);
+  position: relative;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.modal-upload-area:hover {
+  border-color: var(--maroon);
+  background: #fff3f6;
+}
+
+.modal-upload-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.upload-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.modal-upload-text {
+  color: var(--muted);
+}
+
+.upload-hint {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.selected-files {
+  margin-top: 12px;
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--soft);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.file-remove {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.file-remove:hover {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.processing-info {
+  background: #d1ecf1;
+  border: 1px solid #bee5eb;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 13px;
+  color: #0c5460;
+}
+
+.add-client-modal-actions {
+  background: var(--soft);
+  padding: 16px 20px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.create-btn {
+  padding: 10px 20px;
+  background: var(--maroon);
+  border: 1px solid var(--maroon);
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.create-btn:hover:not(:disabled) {
+  background: var(--maroon2);
+  border-color: var(--maroon2);
+}
+
+.create-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 </style>
 </head>
 <body>
@@ -758,13 +987,15 @@ dialog::backdrop {
 
 <div class="main-layout">
   <!-- Clients Column -->
-  <div class="column clients-column">
-    <div class="column-header">Clients</div>
-    <div class="column-body">
-      <div id="clientList"></div>
-    </div>
+<div class="column clients-column">
+  <div class="column-header">
+    Clients
+    <button class="add-client-btn" onclick="openAddClientModal()" title="Add New Client">+</button>
   </div>
-
+  <div class="column-body">
+    <div id="clientList"></div>
+  </div>
+</div>
   <!-- Documents Column -->
   <div class="column documents-column">
     <div class="column-header" id="documentsHeader">${Client}Documents</div>
@@ -850,6 +1081,45 @@ dialog::backdrop {
     </div>
   </div>
 </dialog>
+<!-- Add Client Dialog -->
+<dialog id="addClientModal" aria-label="Add new client">
+  <div class="add-client-modal-content">
+    <div class="add-client-modal-header">
+      <h3>Add New Client</h3>
+      <button type="button" class="modal-close-btn" onclick="closeAddClientModal()">×</button>
+    </div>
+    <div class="add-client-modal-body">
+      <div class="client-name-section">
+        <label for="clientNameInput">Client Name</label>
+        <input type="text" id="clientNameInput" placeholder="John Smith" autocomplete="off">
+        <div class="input-help">Enter the client's full name (first and last)</div>
+      </div>
+      
+      <div class="upload-section">
+        <label>Initial Documents (Optional)</label>
+        <div class="modal-upload-area">
+          <input type="file" class="modal-upload-input" id="clientFileUpload" multiple accept=".pdf,.doc,.docx,.xlsx,.ppt,.pptx">
+          <div class="modal-upload-text">
+            <div class="upload-icon">📄</div>
+            <div>Drop files here or click to upload</div>
+            <div class="upload-hint">Upload documents for this client</div>
+          </div>
+        </div>
+        <div id="selectedFilesList" class="selected-files"></div>
+      </div>
+      
+      <div class="processing-info">
+        <strong>Note:</strong> After creating the client, it may take 1-2 minutes for uploaded documents to appear in the system while they are being processed.
+      </div>
+    </div>
+    <div class="add-client-modal-actions">
+      <button type="button" class="cancel-btn" onclick="closeAddClientModal()">Cancel</button>
+      <button type="button" class="create-btn" id="createClientBtn" onclick="createNewClient()">Create Client</button>
+    </div>
+  </div>
+</dialog>
+
+  
 <script>
 // Simplified client data - just names for the list
 const clientsData = {
@@ -1205,6 +1475,20 @@ function init() {
   document.getElementById('deleteConfirmCheck').addEventListener('change', function() {
     document.getElementById('confirmDelete').disabled = !this.checked;
   });
+ // Add client modal file handling
+  document.getElementById('clientFileUpload').addEventListener('change', function(event) {
+    const files = Array.from(event.target.files);
+    selectedFiles = [...selectedFiles, ...files];
+    updateSelectedFilesList();
+    event.target.value = ''; // Reset input so same file can be selected again
+  });
+  
+  // Escape key handling for add client modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('viewer').open) closeViewer();
+    if (e.key === 'Escape' && document.getElementById('deleteModal').open) cancelDocumentDelete();
+    if (e.key === 'Escape' && document.getElementById('addClientModal').open) closeAddClientModal();
+  });
 }
 
 // Render client list
@@ -1372,6 +1656,171 @@ async function handleFileUpload(event) {
   }
 }
 
+//Add Client
+  let selectedFiles = [];
+
+function openAddClientModal() {
+  document.getElementById('addClientModal').showModal();
+  document.getElementById('clientNameInput').focus();
+  selectedFiles = [];
+  updateSelectedFilesList();
+}
+
+function closeAddClientModal() {
+  document.getElementById('addClientModal').close();
+  document.getElementById('clientNameInput').value = '';
+  selectedFiles = [];
+  updateSelectedFilesList();
+}
+
+function updateSelectedFilesList() {
+  const filesList = document.getElementById('selectedFilesList');
+  filesList.innerHTML = '';
+  
+  selectedFiles.forEach((file, index) => {
+    const fileItem = document.createElement('div');
+    fileItem.className = 'file-item';
+    fileItem.innerHTML = `
+      <span>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+      <button type="button" class="file-remove" onclick="removeFile(${index})">Remove</button>
+    `;
+    filesList.appendChild(fileItem);
+  });
+}
+
+function removeFile(index) {
+  selectedFiles.splice(index, 1);
+  updateSelectedFilesList();
+}
+
+async function createNewClient() {
+  const clientName = document.getElementById('clientNameInput').value.trim();
+  
+  if (!clientName) {
+    alert('Please enter a client name');
+    return;
+  }
+  
+  if (clientName.split(' ').length < 2) {
+    alert('Please enter both first and last name');
+    return;
+  }
+  
+  // Check if client already exists
+  const existingClient = Object.values(clientsData).find(
+    client => client.name.toLowerCase() === clientName.toLowerCase()
+  );
+  
+  if (existingClient) {
+    alert('A client with this name already exists');
+    return;
+  }
+  
+  const createBtn = document.getElementById('createClientBtn');
+  createBtn.disabled = true;
+  createBtn.textContent = 'Creating...';
+  
+  try {
+    // Generate a client ID from the name
+    const clientId = clientName.toLowerCase().replace(/\s+/g, '');
+    
+    // Add client to clientsData
+    clientsData[clientId] = { name: clientName };
+    
+    // Upload files if any were selected
+    if (selectedFiles.length > 0) {
+      createBtn.textContent = 'Uploading documents...';
+      
+      for (const file of selectedFiles) {
+        const fileName = `${clientName} - ${file.name}`;
+        
+        try {
+          // Step 1: Get upload URL from Vertesia
+          const urlResponse = await fetch('https://api.vertesia.io/api/v1/objects/upload-url', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9'
+            },
+            body: JSON.stringify({
+              "name": fileName,
+              "mime_type": file.type || "application/pdf"
+            })
+          });
+          
+          if (!urlResponse.ok) {
+            throw new Error(`Failed to get upload URL: ${urlResponse.status}`);
+          }
+          
+          const uploadData = await urlResponse.json();
+          
+          // Step 2: Upload to Google Cloud Storage
+          const fileUploadResponse = await fetch(uploadData.url, {
+            method: 'PUT',
+            body: file
+          });
+          
+          if (!fileUploadResponse.ok) {
+            throw new Error(`Failed to upload file: ${fileUploadResponse.status}`);
+          }
+          
+          // Step 3: Create the content object in Vertesia
+          const createObjectResponse = await fetch('https://api.vertesia.io/api/v1/objects', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9'
+            },
+            body: JSON.stringify({
+              "name": fileName,
+              "description": `Document uploaded for ${clientName}`,
+              "content": {
+                "source": `gs://store_prod_dd0d3a_2ca798/${uploadData.id}`,
+                "type": file.type || "application/pdf",
+                "name": file.name
+              },
+              "properties": {
+                "client": clientName,
+                "uploaded_at": new Date().toISOString()
+              }
+            })
+          });
+          
+          if (!createObjectResponse.ok) {
+            throw new Error(`Failed to create object: ${createObjectResponse.status}`);
+          }
+          
+        } catch (error) {
+          console.error(`Failed to upload ${file.name}:`, error);
+        }
+      }
+    }
+    
+    // Re-render clients list
+    renderClients();
+    
+    // Switch to the new client
+    switchClient(clientId);
+    
+    // Close modal
+    closeAddClientModal();
+    
+    // Show success message
+    const fileCount = selectedFiles.length;
+    let message = `Client "${clientName}" created successfully!`;
+    if (fileCount > 0) {
+      message += ` ${fileCount} document(s) uploaded and are being processed.`;
+    }
+    alert(message);
+    
+  } catch (error) {
+    console.error('Error creating client:', error);
+    alert(`Failed to create client: ${error.message}`);
+  } finally {
+    createBtn.disabled = false;
+    createBtn.textContent = 'Create Client';
+  }
+}
 // Generate document
 async function generateDocument() {
   const select = document.getElementById('docTypeSelect');
@@ -1801,6 +2250,8 @@ function cancelDocumentDelete() {
   document.getElementById('deleteModal').close();
   documentToDelete = null;
 }
+
+  
 
 // Initialize on page load
 window.onload = init;
