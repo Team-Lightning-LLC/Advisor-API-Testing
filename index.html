@@ -1045,10 +1045,63 @@ function renderDocuments(searchQuery = '') {
 }
 
 // Document actions
-function viewDocument(id) {
+async function viewDocument(id) {
   const doc = documentsData.find(d => d.id === id);
-  const url = fileUrlFromTitle(doc.name);
-  openViewer(url, doc.name);
+  
+  if (!doc || !doc.vertesiaId) {
+    alert('Cannot view this document - missing ID');
+    return;
+  }
+  
+  try {
+    // Step 1: Get the object details to find content.source
+    console.log(`Getting object details for ${doc.vertesiaId}...`);
+    const objectResponse = await fetch(`https://api.vertesia.io/api/v1/objects/${doc.vertesiaId}`, {
+      headers: { 
+        'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9' 
+      }
+    });
+    
+    if (!objectResponse.ok) {
+      throw new Error(`Failed to get object: ${objectResponse.status}`);
+    }
+    
+    const objectData = await objectResponse.json();
+    const fileUri = objectData.content?.source;
+    
+    if (!fileUri) {
+      throw new Error('No file source found in object');
+    }
+    
+    console.log(`File URI: ${fileUri}`);
+    
+    // Step 2: Get downloadable URL
+    console.log('Getting signed download URL...');
+    const downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
+      method: 'POST',
+      headers: { 
+        'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        "file": fileUri 
+      })
+    });
+    
+    if (!downloadResponse.ok) {
+      throw new Error(`Failed to get download URL: ${downloadResponse.status}`);
+    }
+    
+    const downloadData = await downloadResponse.json();
+    console.log('Got signed URL, opening viewer...');
+    
+    // Step 3: Open in your existing viewer
+    openViewer(downloadData.url, doc.name);
+    
+  } catch (error) {
+    console.error('View document error:', error);
+    alert(`Failed to view document: ${error.message}`);
+  }
 }
 
 function sendDocument(id) {
