@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DocuGen Finance</title>
+<!-- Add marked.js library for markdown parsing -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
 :root {
   --maroon: #8B1538;
@@ -369,7 +371,7 @@ body {
   color: #dc3545;
 }
 
-/* PDF Viewer */
+/* Document Viewer */
 dialog#viewer {
   width: min(1100px, 95vw);
   height: min(90vh, 900px);
@@ -418,6 +420,134 @@ dialog::backdrop {
   height: calc(100% - 44px);
   border: 0;
   background: #f5f6f7;
+}
+
+/* Document viewer content styling */
+.viewer-content {
+  padding: 30px 40px;
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  color: #1f2d3d;
+  background: white;
+  height: calc(100% - 44px);
+  overflow-y: auto;
+}
+
+.viewer-content h1 {
+  font-size: 28px;
+  color: #8B1538;
+  border-bottom: 3px solid #8B1538;
+  padding-bottom: 12px;
+  margin: 30px 0 20px 0;
+  font-weight: 700;
+}
+
+.viewer-content h2 {
+  font-size: 22px;
+  color: #1f2d3d;
+  margin: 25px 0 15px 0;
+  font-weight: 600;
+  border-left: 4px solid #8B1538;
+  padding-left: 12px;
+}
+
+.viewer-content h3 {
+  font-size: 18px;
+  color: #1f2d3d;
+  margin: 20px 0 12px 0;
+  font-weight: 600;
+}
+
+.viewer-content h4 {
+  font-size: 16px;
+  color: #1f2d3d;
+  margin: 18px 0 10px 0;
+  font-weight: 600;
+}
+
+.viewer-content p {
+  margin-bottom: 16px;
+  text-align: justify;
+}
+
+.viewer-content ul, .viewer-content ol {
+  margin: 16px 0;
+  padding-left: 30px;
+}
+
+.viewer-content li {
+  margin-bottom: 8px;
+}
+
+.viewer-content ul ul, .viewer-content ol ol {
+  margin: 8px 0;
+}
+
+.viewer-content strong {
+  color: #8B1538;
+  font-weight: 600;
+}
+
+.viewer-content em {
+  font-style: italic;
+}
+
+.viewer-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 14px;
+}
+
+.viewer-content table th {
+  background-color: #f8f9fb;
+  border: 1px solid #e0e5ea;
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+.viewer-content table td {
+  border: 1px solid #e0e5ea;
+  padding: 10px 8px;
+  text-align: left;
+}
+
+.viewer-content table tr:nth-child(even) {
+  background-color: #f8f9fb;
+}
+
+.viewer-content blockquote {
+  border-left: 4px solid #8B1538;
+  margin: 20px 0;
+  padding: 10px 20px;
+  background-color: #f8f9fb;
+  font-style: italic;
+}
+
+.viewer-content code {
+  background-color: #f5f6f7;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.viewer-content pre {
+  background-color: #f5f6f7;
+  padding: 15px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 20px 0;
+}
+
+.viewer-content hr {
+  border: none;
+  border-top: 2px solid #e0e5ea;
+  margin: 30px 0;
 }
 
 .empty-state {
@@ -525,7 +655,7 @@ dialog::backdrop {
   </div>
 </div>
 
-<!-- PDF Viewer Dialog -->
+<!-- Document Viewer Dialog -->
 <dialog id="viewer" aria-label="Document viewer">
   <div class="viewer-header">
     <div class="viewer-title" id="viewerTitle">Document</div>
@@ -734,24 +864,131 @@ class DocumentQueue {
 
 const documentQueue = new DocumentQueue();
 
-// PDF Viewer Functions
-const DOC_DIR = './docs';
-
-function fileUrlFromTitle(title) {
-  return `${DOC_DIR}/${title}.pdf?t=${Date.now()}#page=1&zoom=page-fit`;
-}
-
-function openViewer(url, title) {
+// Viewer Functions
+function openFormattedViewer(markdownContent, title) {
   const dlg = document.getElementById('viewer');
-  document.getElementById('viewerTitle').textContent = title || 'Document';
-  document.getElementById('viewerFrame').src = url + '#page=1';
+  document.getElementById('viewerTitle').textContent = title;
+  
+  // Convert markdown to HTML
+  const htmlContent = marked.parse(markdownContent);
+  
+  // Replace iframe with formatted content div
+  const viewerFrame = document.getElementById('viewerFrame');
+  viewerFrame.outerHTML = `<div id="viewerFrame" class="viewer-content">${htmlContent}</div>`;
+  
   dlg.showModal();
 }
 
 function closeViewer() {
   const dlg = document.getElementById('viewer');
-  document.getElementById('viewerFrame').src = 'about:blank';
+  const viewerFrame = document.getElementById('viewerFrame');
+  
+  // Reset to iframe structure for next use
+  viewerFrame.outerHTML = '<iframe id="viewerFrame"></iframe>';
+  
   if (dlg?.open) dlg.close();
+}
+
+function createFormattedDocument(htmlContent, title) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1f2d3d;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 40px;
+        }
+        h1 {
+            font-size: 28px;
+            color: #8B1538;
+            border-bottom: 3px solid #8B1538;
+            padding-bottom: 12px;
+            margin: 30px 0 20px 0;
+            font-weight: 700;
+        }
+        h2 {
+            font-size: 22px;
+            color: #1f2d3d;
+            margin: 25px 0 15px 0;
+            font-weight: 600;
+            border-left: 4px solid #8B1538;
+            padding-left: 12px;
+        }
+        h3 {
+            font-size: 18px;
+            color: #1f2d3d;
+            margin: 20px 0 12px 0;
+            font-weight: 600;
+        }
+        h4 {
+            font-size: 16px;
+            color: #1f2d3d;
+            margin: 18px 0 10px 0;
+            font-weight: 600;
+        }
+        p {
+            margin-bottom: 16px;
+            text-align: justify;
+        }
+        ul, ol {
+            margin: 16px 0;
+            padding-left: 30px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        ul ul, ol ol {
+            margin: 8px 0;
+        }
+        strong {
+            color: #8B1538;
+            font-weight: 600;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        table th {
+            background-color: #f8f9fb;
+            border: 1px solid #e0e5ea;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: #1f2d3d;
+        }
+        table td {
+            border: 1px solid #e0e5ea;
+            padding: 10px 8px;
+            text-align: left;
+        }
+        table tr:nth-child(even) {
+            background-color: #f8f9fb;
+        }
+        blockquote {
+            border-left: 4px solid #8B1538;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background-color: #f8f9fb;
+            font-style: italic;
+        }
+        @media print {
+            body { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    ${htmlContent}
+</body>
+</html>`;
 }
 
 // Initialize
@@ -1054,7 +1291,6 @@ async function viewDocument(id) {
   }
   
   try {
-    // Step 1: Get the object details to find content.source
     console.log(`Getting object details for ${doc.vertesiaId}...`);
     const objectResponse = await fetch(`https://api.vertesia.io/api/v1/objects/${doc.vertesiaId}`, {
       headers: { 
@@ -1067,32 +1303,13 @@ async function viewDocument(id) {
     }
     
     const objectData = await objectResponse.json();
-    
-    // Option 3: Debug - log complete object data
-    console.log('Complete object data:', JSON.stringify(objectData, null, 2));
-    
-    // Check for different content sources/formats
-    console.log('Available content properties:', {
-      content: objectData.content,
-      versions: objectData.versions,
-      formats: objectData.formats,
-      original: objectData.original,
-      formatted_source: objectData.content?.formatted_source,
-      original_source: objectData.content?.original_source
-    });
-    
     const fileUri = objectData.content?.source;
     
     if (!fileUri) {
       throw new Error('No file source found in object');
     }
     
-    console.log(`File URI: ${fileUri}`);
-    
-    // Step 2: Get downloadable URL with format options
     console.log('Getting signed download URL...');
-    
-    // Option 1: Try with format parameter first
     let downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
       method: 'POST',
       headers: { 
@@ -1105,7 +1322,6 @@ async function viewDocument(id) {
       })
     });
     
-    // If that fails, try without format parameter
     if (!downloadResponse.ok) {
       console.log('Format parameter failed, trying without format...');
       downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
@@ -1125,10 +1341,14 @@ async function viewDocument(id) {
     }
     
     const downloadData = await downloadResponse.json();
-    console.log('Download data:', downloadData);
     
-    // Step 3: Open in your existing viewer
-    openViewer(downloadData.url, doc.name);
+    // Fetch the text content
+    console.log('Fetching document content...');
+    const textResponse = await fetch(downloadData.url);
+    const markdownContent = await textResponse.text();
+    
+    // Open in formatted viewer
+    openFormattedViewer(markdownContent, doc.name);
     
   } catch (error) {
     console.error('View document error:', error);
@@ -1164,16 +1384,31 @@ async function downloadDocument(id) {
     }
     
     console.log('Getting signed download URL...');
-    const downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
+    let downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
       method: 'POST',
       headers: { 
         'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ 
-        "file": fileUri 
+        "file": fileUri,
+        "format": "original"
       })
     });
+    
+    if (!downloadResponse.ok) {
+      console.log('Format parameter failed, trying without format...');
+      downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
+        method: 'POST',
+        headers: { 
+          'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          "file": fileUri
+        })
+      });
+    }
     
     if (!downloadResponse.ok) {
       throw new Error(`Failed to get download URL: ${downloadResponse.status}`);
@@ -1181,21 +1416,23 @@ async function downloadDocument(id) {
     
     const downloadData = await downloadResponse.json();
     
-    // Fetch the actual file content as a blob
-    console.log('Downloading file content...');
-    const fileResponse = await fetch(downloadData.url);
+    // Fetch the markdown content
+    console.log('Downloading and formatting content...');
+    const textResponse = await fetch(downloadData.url);
+    const markdownContent = await textResponse.text();
     
-    if (!fileResponse.ok) {
-      throw new Error(`Failed to fetch file: ${fileResponse.status}`);
-    }
+    // Convert to formatted HTML
+    const htmlContent = marked.parse(markdownContent);
     
-    const blob = await fileResponse.blob();
+    // Create complete HTML document with styling
+    const fullHtmlDocument = createFormattedDocument(htmlContent, doc.name);
     
-    // Create a blob URL and force download
+    // Create blob and download
+    const blob = new Blob([fullHtmlDocument], { type: 'text/html' });
     const blobUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = blobUrl;
-    link.download = doc.name; // This forces download instead of opening
+    link.download = doc.name.replace(/\.[^/.]+$/, '') + '.html'; // Replace extension with .html
     link.style.display = 'none';
     
     document.body.appendChild(link);
@@ -1210,6 +1447,14 @@ async function downloadDocument(id) {
   } catch (error) {
     console.error('Download document error:', error);
     alert(`Failed to download document: ${error.message}`);
+  }
+}
+
+function sendDocument(id) {
+  const doc = documentsData.find(d => d.id === id);
+  const email = prompt('Send document to email:', 'client@example.com');
+  if (email) {
+    alert(`Document "${doc.name}" sent to ${email}`);
   }
 }
 
