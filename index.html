@@ -1026,7 +1026,7 @@ function renderDocuments(searchQuery = '') {
     return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
   });
   
-  filteredDocs.forEach(doc => {
+  filteredDocs.forEach((doc, index) => {
     const div = document.createElement('div');
     div.className = 'doc-item';
     div.innerHTML = `
@@ -1035,9 +1035,9 @@ function renderDocuments(searchQuery = '') {
         <div class="doc-date">${doc.date}</div>
       </div>
       <div class="doc-actions">
-        <span class="doc-action" onclick="viewDocument(${doc.id})">view</span>
-        <span class="doc-action" onclick="sendDocument(${doc.id})">send</span>
-        <span class="doc-action" onclick="deleteDocument(${doc.id})">delete</span>
+        <span class="doc-action" onclick="viewDocument('${doc.id}')">view</span>
+        <span class="doc-action" onclick="downloadDocument('${doc.id}')">download</span>
+        <span class="doc-action" onclick="deleteDocument('${doc.id}')">delete</span>
       </div>
     `;
     docsList.appendChild(div);
@@ -1104,11 +1104,66 @@ async function viewDocument(id) {
   }
 }
 
-function sendDocument(id) {
+async function downloadDocument(id) {
   const doc = documentsData.find(d => d.id === id);
-  const email = prompt('Send document to email:', 'client@example.com');
-  if (email) {
-    alert(`Document "${doc.name}" sent to ${email}`);
+  
+  if (!doc || !doc.vertesiaId) {
+    alert('Cannot download this document - missing ID');
+    return;
+  }
+  
+  try {
+    // Step 1: Get the object details to find content.source
+    console.log(`Getting object details for download: ${doc.vertesiaId}...`);
+    const objectResponse = await fetch(`https://api.vertesia.io/api/v1/objects/${doc.vertesiaId}`, {
+      headers: { 
+        'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9' 
+      }
+    });
+    
+    if (!objectResponse.ok) {
+      throw new Error(`Failed to get object: ${objectResponse.status}`);
+    }
+    
+    const objectData = await objectResponse.json();
+    const fileUri = objectData.content?.source;
+    
+    if (!fileUri) {
+      throw new Error('No file source found in object');
+    }
+    
+    // Step 2: Get downloadable URL
+    console.log('Getting signed download URL...');
+    const downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
+      method: 'POST',
+      headers: { 
+        'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        "file": fileUri 
+      })
+    });
+    
+    if (!downloadResponse.ok) {
+      throw new Error(`Failed to get download URL: ${downloadResponse.status}`);
+    }
+    
+    const downloadData = await downloadResponse.json();
+    
+    // Step 3: Trigger download
+    const link = document.createElement('a');
+    link.href = downloadData.url;
+    link.download = doc.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log(`Download initiated for: ${doc.name}`);
+    
+  } catch (error) {
+    console.error('Download document error:', error);
+    alert(`Failed to download document: ${error.message}`);
   }
 }
 
