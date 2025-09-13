@@ -1067,6 +1067,20 @@ async function viewDocument(id) {
     }
     
     const objectData = await objectResponse.json();
+    
+    // Option 3: Debug - log complete object data
+    console.log('Complete object data:', JSON.stringify(objectData, null, 2));
+    
+    // Check for different content sources/formats
+    console.log('Available content properties:', {
+      content: objectData.content,
+      versions: objectData.versions,
+      formats: objectData.formats,
+      original: objectData.original,
+      formatted_source: objectData.content?.formatted_source,
+      original_source: objectData.content?.original_source
+    });
+    
     const fileUri = objectData.content?.source;
     
     if (!fileUri) {
@@ -1075,25 +1089,43 @@ async function viewDocument(id) {
     
     console.log(`File URI: ${fileUri}`);
     
-    // Step 2: Get downloadable URL
+    // Step 2: Get downloadable URL with format options
     console.log('Getting signed download URL...');
-    const downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
+    
+    // Option 1: Try with format parameter first
+    let downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
       method: 'POST',
       headers: { 
         'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ 
-        "file": fileUri 
+        "file": fileUri,
+        "format": "original"
       })
     });
+    
+    // If that fails, try without format parameter
+    if (!downloadResponse.ok) {
+      console.log('Format parameter failed, trying without format...');
+      downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
+        method: 'POST',
+        headers: { 
+          'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          "file": fileUri
+        })
+      });
+    }
     
     if (!downloadResponse.ok) {
       throw new Error(`Failed to get download URL: ${downloadResponse.status}`);
     }
     
     const downloadData = await downloadResponse.json();
-    console.log('Got signed URL, opening viewer...');
+    console.log('Download data:', downloadData);
     
     // Step 3: Open in your existing viewer
     openViewer(downloadData.url, doc.name);
