@@ -584,6 +584,162 @@ dialog::backdrop {
     max-height: 300px;
   }
 }
+
+  /* Delete Dialog CSS */
+#deleteModal {
+  width: min(500px, 90vw);
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  margin: auto;
+}
+
+#deleteModal::backdrop {
+  background: rgba(0,0,0,.6);
+}
+
+.delete-modal-content {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.delete-modal-header {
+  background: #dc3545;
+  color: white;
+  padding: 16px 20px;
+  font-weight: 600;
+}
+
+.delete-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.delete-modal-body {
+  padding: 20px;
+}
+
+.delete-warning {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+  color: #856404;
+  text-align: center;
+}
+
+.delete-modal-body p {
+  margin-bottom: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.document-info {
+  background: var(--soft);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+
+.delete-confirmation {
+  margin-bottom: 20px;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.4;
+  gap: 10px;
+}
+
+.checkbox-container input[type="checkbox"] {
+  margin: 0;
+  opacity: 0;
+  position: absolute;
+}
+
+.checkmark {
+  width: 18px;
+  height: 18px;
+  background-color: white;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.checkbox-container:hover .checkmark {
+  border-color: var(--maroon);
+}
+
+.checkbox-container input:checked + .checkmark {
+  background-color: var(--maroon);
+  border-color: var(--maroon);
+}
+
+.checkbox-container input:checked + .checkmark::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.delete-modal-actions {
+  background: var(--soft);
+  padding: 16px 20px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.cancel-btn {
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.cancel-btn:hover {
+  background: var(--soft);
+}
+
+.delete-btn {
+  padding: 8px 16px;
+  background: #dc3545;
+  border: 1px solid #dc3545;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.delete-btn:hover:not(:disabled) {
+  background: #c82333;
+  border-color: #c82333;
+}
+
+.delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 </style>
 </head>
 <body>
@@ -665,7 +821,35 @@ dialog::backdrop {
   </div>
   <iframe id="viewerFrame"></iframe>
 </dialog>
-
+  
+<!-- Delete Confirmation Dialog -->
+<dialog id="deleteModal" aria-label="Delete confirmation">
+  <div class="delete-modal-content">
+    <div class="delete-modal-header">
+      <h3>Delete Document</h3>
+    </div>
+    <div class="delete-modal-body">
+      <div class="delete-warning">
+        <strong>⚠️ This action cannot be undone.</strong>
+      </div>
+      <p>Deleting this document will permanently remove it from the database and exclude it from all future analysis and document generation.</p>
+      <div class="document-info">
+        <strong>Document:</strong> <span id="deleteDocumentName"></span>
+      </div>
+      <div class="delete-confirmation">
+        <label class="checkbox-container">
+          <input type="checkbox" id="deleteConfirmCheck">
+          <span class="checkmark"></span>
+          I understand this action is permanent and cannot be reversed
+        </label>
+      </div>
+    </div>
+    <div class="delete-modal-actions">
+      <button type="button" class="cancel-btn" id="cancelDelete">Cancel</button>
+      <button type="button" class="delete-btn" id="confirmDelete" disabled>Delete Document</button>
+    </div>
+  </div>
+</dialog>
 <script>
 // Simplified client data - just names for the list
 const clientsData = {
@@ -997,7 +1181,7 @@ function createFormattedDocument(htmlContent, title) {
 function init() {
   renderClients();
   switchClient('ahmed');
-  renderDocuments(); // Will show empty initially
+  renderDocuments();
   
   // Initialize viewer
   document.getElementById('closeViewer').addEventListener('click', closeViewer);
@@ -1010,6 +1194,16 @@ function init() {
   
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && document.getElementById('viewer').open) closeViewer();
+    if (e.key === 'Escape' && document.getElementById('deleteModal').open) cancelDocumentDelete();
+  });
+  
+  // Initialize delete modal
+  document.getElementById('cancelDelete').addEventListener('click', cancelDocumentDelete);
+  document.getElementById('confirmDelete').addEventListener('click', confirmDocumentDelete);
+  
+  // Checkbox validation for delete button
+  document.getElementById('deleteConfirmCheck').addEventListener('change', function() {
+    document.getElementById('confirmDelete').disabled = !this.checked;
   });
 }
 
@@ -1540,11 +1734,72 @@ function sendDocument(id) {
   }
 }
 
+let documentToDelete = null;
+
 function deleteDocument(id) {
-  if (confirm('Are you sure you want to delete this document?')) {
-    documentsData = documentsData.filter(d => d.id !== id);
-    renderDocuments();
+  const doc = documentsData.find(d => d.id === id);
+  if (!doc) {
+    alert('Document not found');
+    return;
   }
+  
+  documentToDelete = doc;
+  
+  // Update the modal with document info
+  document.getElementById('deleteDocumentName').textContent = doc.name;
+  
+  // Reset checkbox and button state
+  const checkbox = document.getElementById('deleteConfirmCheck');
+  const deleteBtn = document.getElementById('confirmDelete');
+  checkbox.checked = false;
+  deleteBtn.disabled = true;
+  
+  // Show the modal
+  document.getElementById('deleteModal').showModal();
+}
+
+async function confirmDocumentDelete() {
+  if (!documentToDelete) return;
+  
+  try {
+    console.log(`Deleting document: ${documentToDelete.vertesiaId}`);
+    
+    // Make DELETE request to Vertesia API
+    const response = await fetch(`https://api.vertesia.io/api/v1/objects/${documentToDelete.vertesiaId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to delete document: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('Delete result:', result);
+    
+    // Remove from local array
+    documentsData = documentsData.filter(d => d.id !== documentToDelete.id);
+    
+    // Re-render the document list
+    renderDocuments();
+    
+    // Close modal and reset
+    document.getElementById('deleteModal').close();
+    documentToDelete = null;
+    
+    console.log(`Document deleted successfully: ${documentToDelete?.name}`);
+    
+  } catch (error) {
+    console.error('Delete document error:', error);
+    alert(`Failed to delete document: ${error.message}`);
+  }
+}
+
+function cancelDocumentDelete() {
+  document.getElementById('deleteModal').close();
+  documentToDelete = null;
 }
 
 // Initialize on page load
