@@ -1113,7 +1113,6 @@ async function downloadDocument(id) {
   }
   
   try {
-    // Step 1: Get the object details to find content.source
     console.log(`Getting object details for download: ${doc.vertesiaId}...`);
     const objectResponse = await fetch(`https://api.vertesia.io/api/v1/objects/${doc.vertesiaId}`, {
       headers: { 
@@ -1132,7 +1131,6 @@ async function downloadDocument(id) {
       throw new Error('No file source found in object');
     }
     
-    // Step 2: Get downloadable URL
     console.log('Getting signed download URL...');
     const downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
       method: 'POST',
@@ -1151,15 +1149,31 @@ async function downloadDocument(id) {
     
     const downloadData = await downloadResponse.json();
     
-    // Step 3: Trigger download
+    // Fetch the actual file content as a blob
+    console.log('Downloading file content...');
+    const fileResponse = await fetch(downloadData.url);
+    
+    if (!fileResponse.ok) {
+      throw new Error(`Failed to fetch file: ${fileResponse.status}`);
+    }
+    
+    const blob = await fileResponse.blob();
+    
+    // Create a blob URL and force download
+    const blobUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = downloadData.url;
-    link.download = doc.name;
+    link.href = blobUrl;
+    link.download = doc.name; // This forces download instead of opening
+    link.style.display = 'none';
+    
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
-    console.log(`Download initiated for: ${doc.name}`);
+    // Clean up the blob URL
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    
+    console.log(`Download completed: ${doc.name}`);
     
   } catch (error) {
     console.error('Download document error:', error);
