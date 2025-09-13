@@ -1167,7 +1167,6 @@ async function loadClientsFromVertesia() {
   try {
     console.log('Loading clients from Vertesia...');
     
-    // Get all documents from Vertesia
     const response = await fetch('https://api.vertesia.io/api/v1/objects?limit=1000&offset=0', {
       method: 'GET',
       headers: {
@@ -1183,64 +1182,84 @@ async function loadClientsFromVertesia() {
     const documents = await response.json();
     console.log(`Found ${documents.length} documents in Vertesia`);
     
-    // Extract unique client names from document properties
+    // Extract unique client names with better logic
     const clientNames = new Set();
     
     documents.forEach(doc => {
-      // Check various places where client name might be stored
       let clientName = null;
       
-      // First check document properties
+      // Check document properties first
       if (doc.properties && doc.properties.client) {
         clientName = doc.properties.client;
       }
-      // Fallback: extract from document name (e.g., "Ahmed Ishmal - Document.pdf")
+      // Enhanced extraction from document name
       else if (doc.name) {
-        const parts = doc.name.split(' - ');
-        if (parts.length > 1) {
-          // Take everything before the first " - " as the client name
-          clientName = parts[0].trim();
+        // Try multiple patterns:
+        // 1. "FirstName LastName - Document.pdf"
+        // 2. "FirstName_LastName_Document.pdf" 
+        // 3. "FirstNameLastName Document.pdf"
+        
+        // Pattern 1: Standard " - " format
+        if (doc.name.includes(' - ')) {
+          clientName = doc.name.split(' - ')[0].trim();
+        }
+        // Pattern 2: Underscore separated (Chris_Lehman_Document.pdf)
+        else if (doc.name.includes('_')) {
+          const parts = doc.name.split('_');
+          if (parts.length >= 2) {
+            // Take first two parts as first/last name
+            clientName = `${parts[0]} ${parts[1]}`;
+          }
+        }
+        // Pattern 3: Look for common name patterns
+        else {
+          // Extract likely names from start of filename
+          const nameMatch = doc.name.match(/^([A-Z][a-z]+\s+[A-Z][a-z]+)/);
+          if (nameMatch) {
+            clientName = nameMatch[1];
+          }
         }
       }
       
+      // Clean up and validate client name
       if (clientName) {
-        clientNames.add(clientName);
+        // Remove file extensions and clean up
+        clientName = clientName.replace(/\.(pdf|docx?|xlsx?|pptx?)$/i, '').trim();
+        
+        // Only add if it looks like a real name (has at least first and last)
+        if (clientName.includes(' ') && clientName.split(' ').length >= 2) {
+          clientNames.add(clientName);
+        }
       }
     });
     
-    // Convert client names to clientsData format
+    // Convert to clientsData format
     clientsData = {};
     clientNames.forEach(clientName => {
-      // Generate client ID from name (lowercase, no spaces)
       const clientId = clientName.toLowerCase()
-        .replace(/[^a-z0-9\s]/g, '') // Remove special characters
-        .replace(/\s+/g, ''); // Remove spaces
+        .replace(/[^a-z0-9\s]/g, '')
+        .replace(/\s+/g, '');
       
       clientsData[clientId] = { name: clientName };
     });
     
-    console.log('Loaded clients:', Object.keys(clientsData));
+    console.log('Loaded clients:', Object.values(clientsData).map(c => c.name));
     
-    // Re-render client list
     renderClients();
     
-    // If no current client is selected or current client no longer exists, select first one
     if (!currentClient || !clientsData[currentClient]) {
       const firstClientId = Object.keys(clientsData)[0];
       if (firstClientId) {
         switchClient(firstClientId);
       }
     } else {
-      // Refresh current client's documents
       await loadClientDocuments(currentClient);
     }
     
   } catch (error) {
     console.error('Failed to load clients from Vertesia:', error);
-    // Keep any existing clients on error
   }
 }
-
 // Test Vertesia API function
 async function testVertesiaAPI() {
   const testBtn = document.getElementById('testApiBtn');
