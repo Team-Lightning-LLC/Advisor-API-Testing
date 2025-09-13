@@ -6,6 +6,8 @@
 <title>DocuGen Finance</title>
 <!-- Add marked.js library for markdown parsing -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root {
   --maroon: #8B1538;
@@ -1424,25 +1426,105 @@ async function downloadDocument(id) {
     // Convert to formatted HTML
     const htmlContent = marked.parse(markdownContent);
     
-    // Create complete HTML document with styling
-    const fullHtmlDocument = createFormattedDocument(htmlContent, doc.name);
+    // Create a temporary div with the formatted content
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    tempDiv.style.cssText = `
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1f2d3d;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 30px 40px;
+    `;
     
-    // Create blob and download
-    const blob = new Blob([fullHtmlDocument], { type: 'text/html' });
-    const blobUrl = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = doc.name.replace(/\.[^/.]+$/, '') + '.html'; // Replace extension with .html
-    link.style.display = 'none';
+    // Apply styling to elements
+    tempDiv.querySelectorAll('h1').forEach(h1 => {
+      h1.style.cssText = `
+        font-size: 28px;
+        color: #8B1538;
+        border-bottom: 3px solid #8B1538;
+        padding-bottom: 12px;
+        margin: 30px 0 20px 0;
+        font-weight: 700;
+      `;
+    });
     
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    tempDiv.querySelectorAll('h2').forEach(h2 => {
+      h2.style.cssText = `
+        font-size: 22px;
+        color: #1f2d3d;
+        margin: 25px 0 15px 0;
+        font-weight: 600;
+        border-left: 4px solid #8B1538;
+        padding-left: 12px;
+      `;
+    });
     
-    // Clean up the blob URL
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    tempDiv.querySelectorAll('h3').forEach(h3 => {
+      h3.style.cssText = `
+        font-size: 18px;
+        color: #1f2d3d;
+        margin: 20px 0 12px 0;
+        font-weight: 600;
+      `;
+    });
     
-    console.log(`Download completed: ${doc.name}`);
+    tempDiv.querySelectorAll('p').forEach(p => {
+      p.style.cssText = 'margin-bottom: 16px; text-align: justify;';
+    });
+    
+    tempDiv.querySelectorAll('strong').forEach(strong => {
+      strong.style.cssText = 'color: #8B1538; font-weight: 600;';
+    });
+    
+    tempDiv.querySelectorAll('table').forEach(table => {
+      table.style.cssText = `
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-size: 14px;
+      `;
+      
+      table.querySelectorAll('th').forEach(th => {
+        th.style.cssText = `
+          background-color: #f8f9fb;
+          border: 1px solid #e0e5ea;
+          padding: 12px 8px;
+          text-align: left;
+          font-weight: 600;
+        `;
+      });
+      
+      table.querySelectorAll('td').forEach(td => {
+        td.style.cssText = `
+          border: 1px solid #e0e5ea;
+          padding: 10px 8px;
+          text-align: left;
+        `;
+      });
+    });
+    
+    // Add to body temporarily for PDF generation
+    document.body.appendChild(tempDiv);
+    
+    // Configure PDF options
+    const opt = {
+      margin: 0.5,
+      filename: doc.name.replace(/\.[^/.]+$/, '') + '.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    
+    // Generate and download PDF
+    try {
+      await html2pdf().set(opt).from(tempDiv).save();
+      console.log(`PDF download completed: ${doc.name}`);
+    } finally {
+      // Clean up - remove the temporary div
+      document.body.removeChild(tempDiv);
+    }
     
   } catch (error) {
     console.error('Download document error:', error);
