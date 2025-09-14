@@ -1330,14 +1330,18 @@ async function loadClientsFromVertesia() {
       }
     });
     
-    // Convert to clientsData format using unique normalized names
+    // Convert to array, sort alphabetically, then convert to clientsData format
+    const sortedEntries = Array.from(clientNamesMap.entries()).sort((a, b) => 
+      a[1].localeCompare(b[1]) // Sort by display name
+    );
+    
     clientsData = {};
-    clientNamesMap.forEach((displayName, normalizedName) => {
+    sortedEntries.forEach(([normalizedName, displayName]) => {
       const clientId = normalizedName.replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '');
       clientsData[clientId] = { name: displayName };
     });
     
-    console.log('Loaded unique clients:', Object.values(clientsData).map(c => c.name));
+    console.log('Loaded unique clients in A-Z order:', Object.values(clientsData).map(c => c.name));
     
     renderClients();
     
