@@ -1955,45 +1955,74 @@ async function viewDocument(id) {
     }
     
     const objectData = await objectResponse.json();
-    const fileUri = objectData.content?.source;
+    console.log('Document type:', objectData.content?.type);
     
-    if (!fileUri) {
-      throw new Error('No file source found in object');
-    }
+    // Check if this is a markdown document (processed by Vertesia)
+    const isMarkdown = objectData.content?.type === 'text/markdown';
     
-    console.log('Getting signed download URL...');
-    let downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
-      method: 'POST',
-      headers: { 
-        'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        "file": fileUri,
-        "format": "original"
-      })
-    });
-    
-    if (!downloadResponse.ok) {
-      console.log('Format parameter failed, trying without format...');
-      downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
+    if (isMarkdown) {
+      // Handle markdown documents (our formatted viewer)
+      const fileUri = objectData.content?.source;
+      
+      if (!fileUri) {
+        throw new Error('No file source found in object');
+      }
+      
+      const downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
         method: 'POST',
         headers: { 
           'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
-          "file": fileUri
-        })
+        body: JSON.stringify({ "file": fileUri })
       });
+      
+      if (!downloadResponse.ok) {
+        throw new Error(`Failed to get download URL: ${downloadResponse.status}`);
+      }
+      
+      const downloadData = await downloadResponse.json();
+      const textResponse = await fetch(downloadData.url);
+      const markdownContent = await textResponse.text();
+      
+      openFormattedViewer(markdownContent, doc.name);
+      
+    } else {
+      // Handle PDF/Office documents (use iframe viewer)
+      const fileUri = objectData.content?.source;
+      
+      const downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
+        method: 'POST',
+        headers: { 
+          'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ "file": fileUri })
+      });
+      
+      if (!downloadResponse.ok) {
+        throw new Error(`Failed to get download URL: ${downloadResponse.status}`);
+      }
+      
+      const downloadData = await downloadResponse.json();
+      
+      // Open PDF/Office docs in regular iframe
+      openViewer(downloadData.url, doc.name);
     }
     
-    if (!downloadResponse.ok) {
-      throw new Error(`Failed to get download URL: ${downloadResponse.status}`);
-    }
-    
-    const downloadData = await downloadResponse.json();
-    
+  } catch (error) {
+    console.error('View document error:', error);
+    alert(`Failed to view document: ${error.message}`);
+  }
+}
+
+// Add a regular viewer function for PDFs/Office docs
+function openViewer(url, title) {
+  const dlg = document.getElementById('viewer');
+  document.getElementById('viewerTitle').textContent = title || 'Document';
+  document.getElementById('viewerFrame').src = url;
+  dlg.showModal();
+}
     // Fetch the text content
     console.log('Fetching document content...');
     const textResponse = await fetch(downloadData.url);
