@@ -1386,7 +1386,7 @@ dialog::backdrop {
       <div class="delete-warning">
         <strong>⚠️ This action cannot be undone.</strong>
       </div>
-      <p>Deleting this document will permanently remove it from the database and exclude it from all future analysis and document generation.</p>
+      <p> Deleting this document will permanently remove it from the database and exclude it from all future analysis and document generation. </p>
       <div class="document-info">
         <strong>Document:</strong> <span id="deleteDocumentName"></span>
       </div>
@@ -1731,7 +1731,7 @@ async function generateAIProfile() {
         "type": "conversation",
         "interaction": "TESTFinancialProfileGenerator@2",
         "data": {
-          "query": `For ${clientsData[currentClient].name} create an AI Profile`
+          "task": `For ${clientsData[currentClient].name} create an AI Profile`
         },
         "config": {
           "environment": "681915c6a01fb262a410c161",
