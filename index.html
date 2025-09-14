@@ -1408,14 +1408,30 @@ function checkClientProfile(clientId) {
   const client = clientsData[clientId];
   if (!client) return false;
   
-  // Convert client name to expected AI profile format: "Client_Name_AI_Profile"
-  const expectedProfileName = client.name.replace(/\s+/g, '_') + '_AI_Profile';
+  // Get client's first and last name parts
+  const nameParts = client.name.split(' ');
+  const firstName = nameParts[0];
+  const lastName = nameParts[1] || '';
   
-  // Look for AI profile document with exact naming pattern
-  return documentsData.some(doc => 
-    doc.client === clientId && 
-    doc.name === expectedProfileName
-  );
+  // Look for AI profile document with flexible matching
+  return documentsData.some(doc => {
+    // Must be associated with this client
+    if (doc.client !== clientId) return false;
+    
+    // Convert document name to lowercase for case-insensitive matching
+    const docNameLower = doc.name.toLowerCase();
+    
+    // Check if document contains AI profile indicators
+    const hasAIProfile = docNameLower.includes('ai_profile') || 
+                        docNameLower.includes('ai profile') ||
+                        docNameLower.includes('aiprofile');
+    
+    // Check if document contains client's name
+    const hasClientName = docNameLower.includes(firstName.toLowerCase()) &&
+                         (lastName === '' || docNameLower.includes(lastName.toLowerCase()));
+    
+    return hasAIProfile && hasClientName;
+  });
 }
 
 function updateProfileStatus() {
