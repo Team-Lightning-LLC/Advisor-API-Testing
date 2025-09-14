@@ -319,78 +319,67 @@ body {
   font-weight: 500;
 }
 
-/* AI Profile Status - FIXED */
-.profile-status-section {
-  background: var(--soft);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
-}
-  
-.profile-status-header {
+/* AI Profile Status */
+
+.profile-status-inline {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-weight: 600;
-  color: var(--ink);
-  margin-bottom: 16px;
-  font-size: 15px;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
-.profile-icon {
-  font-size: 18px;
-}
-
-.profile-complete {
+.profile-complete-inline {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   color: var(--ok);
   font-weight: 600;
-  font-size: 14px;
 }
 
-.profile-needed {
+.profile-needed-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--warn);
-  font-size: 14px;
-  line-height: 1.5;
-  text-align: center;
+  font-weight: 500;
 }
 
-.status-light {
-  width: 10px;
-  height: 10px;
+.status-light-inline {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  display: inline-block;
   flex-shrink: 0;
-  margin-right: 8px;
 }
 
-.status-light.green {
+.status-light-inline.green {
   background: var(--ok);
   box-shadow: 0 0 0 2px rgba(31, 122, 77, 0.2);
 }
 
-.generate-profile-btn {
+.status-light-inline.red {
+  background: var(--warn);
+  box-shadow: 0 0 0 2px rgba(138, 90, 0, 0.2);
+}
+
+.generate-profile-btn-inline {
   background: var(--primary);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 4px 10px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   transition: all 0.2s ease;
-  margin-top: 12px;
+  margin-left: 4px;
 }
 
-.generate-profile-btn:hover:not(:disabled) {
+.generate-profile-btn-inline:hover:not(:disabled) {
   background: var(--primary-dark);
-  transform: translateY(-1px);
 }
 
-.generate-profile-btn:disabled {
+.generate-profile-btn-inline:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -1208,34 +1197,30 @@ dialog::backdrop {
   </div>
 
   <!-- Documents Column -->
-  <div class="column documents-column">
-    <div class="column-header" id="documentsHeader">Documents</div>
-    <div class="column-body">
-      <div class="upload-area">
-        <input type="file" class="upload-input" id="fileUpload" onchange="handleFileUpload(event)" multiple accept=".pdf,.doc,.docx,.xlsx,.ppt,.pptx">
-        <div class="upload-text">Drop files here or click to upload</div>
-      </div>
-      
-      <!-- AI Profile Status Section -->
-      <div class="profile-status-section">
-        <div class="profile-status-header">
-  <!-- Header text removed, keeping just the container for styling -->
-</div>
-        <div id="profileStatus" class="profile-status-content">
-          <!-- Will be populated dynamically -->
-        </div>
-      </div>
-      
-      <div class="doc-controls">
-        <input type="text" class="search-bar" id="searchBar" placeholder="Search documents..." onkeyup="searchDocuments()">
-        <span class="doc-control" onclick="sortDocuments()">Sort by Date</span>
-        <span class="doc-control" onclick="toggleDocuments()">Toggle All</span>
-      </div>
-      
-      <div class="doc-list" id="documentsList"></div>
+<div class="column documents-column">
+  <div class="column-header" id="documentsHeader">
+    <span>Documents</span>
+    <div id="profileStatus" class="profile-status-inline">
+      <!-- Will be populated dynamically -->
     </div>
   </div>
-
+  <div class="column-body">
+    <div class="upload-area">
+      <input type="file" class="upload-input" id="fileUpload" onchange="handleFileUpload(event)" multiple accept=".pdf,.doc,.docx,.xlsx,.ppt,.pptx">
+      <div class="upload-text">Drop files here or click to upload</div>
+    </div>
+    
+    <!-- Remove the entire profile-status-section div from here -->
+    
+    <div class="doc-controls">
+      <input type="text" class="search-bar" id="searchBar" placeholder="Search documents..." onkeyup="searchDocuments()">
+      <span class="doc-control" onclick="sortDocuments()">Sort by Date</span>
+      <span class="doc-control" onclick="toggleDocuments()">Toggle All</span>
+    </div>
+    
+    <div class="doc-list" id="documentsList"></div>
+  </div>
+</div>
   <!-- Generate Column -->
   <div class="column generate-column">
     <div class="column-header">Generate</div>
@@ -1550,12 +1535,7 @@ function updateProfileStatus() {
   const profileStatus = document.getElementById('profileStatus');
   
   if (!currentClient || !clientsData[currentClient]) {
-    profileStatus.innerHTML = `
-      <div class="profile-needed">
-
-        <span>No client selected</span>
-      </div>
-    `;
+    profileStatus.innerHTML = '';
     return;
   }
   
@@ -1563,18 +1543,18 @@ function updateProfileStatus() {
   
   if (hasProfile) {
     profileStatus.innerHTML = `
-      <div class="profile-complete">
-        <span class="status-light green"></span>
+      <div class="profile-complete-inline">
+        <span class="status-light-inline green"></span>
         <span>AI Profile Complete</span>
       </div>
     `;
   } else {
     profileStatus.innerHTML = `
-      <div class="profile-needed">
-      
-        <span> </span>
-        <button class="generate-profile-btn" onclick="generateAIProfile()">
-          Generate AI Profile
+      <div class="profile-needed-inline">
+        <span class="status-light-inline red"></span>
+        <span>AI Profile Required</span>
+        <button class="generate-profile-btn-inline" onclick="generateAIProfile()">
+          Generate
         </button>
       </div>
     `;
@@ -1852,8 +1832,8 @@ async function switchClient(clientId) {
   
   if (!client) return;
   
-  // Update UI
-  document.getElementById('documentsHeader').textContent = `${client.name} Documents`;
+  // Update UI - just show client name, profile status will be separate
+  document.getElementById('documentsHeader').querySelector('span').textContent = `${client.name} Documents`;
   renderClients();
   
   // Load documents for this specific client
