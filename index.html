@@ -1790,7 +1790,71 @@ function updateGenerateButtonCooldown() {
     generateBtn.disabled = false;
   }
 }
+// Search documents
+function searchDocuments() {
+  const query = document.getElementById('searchBar').value.toLowerCase();
+  renderDocuments(query);
+}
 
+// Sort documents
+function sortDocuments() {
+  sortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+  renderDocuments();
+}
+
+// Toggle documents
+function toggleDocuments() {
+  documentsVisible = !documentsVisible;
+  const docItems = document.querySelectorAll('.doc-item');
+  docItems.forEach(item => {
+    item.style.display = documentsVisible ? 'flex' : 'none';
+  });
+}
+
+// Render documents
+function renderDocuments(searchQuery = '') {
+  const docsList = document.getElementById('documentsList');
+  docsList.innerHTML = '';
+  
+  // Update profile status first
+  updateProfileStatus();
+  
+  let filteredDocs = documentsData.filter(doc => 
+    (doc.client === currentClient || doc.client === 'all') &&
+    (searchQuery === '' || doc.name.toLowerCase().includes(searchQuery))
+  );
+  
+  if (filteredDocs.length === 0) {
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = 'empty-state';
+    emptyDiv.textContent = 'No documents found. Try uploading files or generating new documents.';
+    docsList.appendChild(emptyDiv);
+    return;
+  }
+  
+  filteredDocs.sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+  });
+  
+  filteredDocs.forEach((doc, index) => {
+    const div = document.createElement('div');
+    div.className = 'doc-item';
+    div.innerHTML = `
+      <div class="doc-info">
+        <div class="doc-name">${doc.name}</div>
+        <div class="doc-date">${doc.date}</div>
+      </div>
+      <div class="doc-actions">
+        <span class="doc-action" onclick="viewDocument('${doc.id}')">view</span>
+        <span class="doc-action" onclick="downloadDocument('${doc.id}')">download</span>
+        <span class="doc-action" onclick="deleteDocument('${doc.id}')">delete</span>
+      </div>
+    `;
+    docsList.appendChild(div);
+  });
+}
 // Call this after each generation
 // Add to generateDocument() and generateAIProfile() after lastGenerationTime = now;
 setTimeout(updateGenerateButtonCooldown, 100);
