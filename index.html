@@ -340,10 +340,6 @@ body {
   box-shadow: 0 0 0 2px rgba(31, 122, 77, 0.2);
 }
 
-.status-light.red {
-  background: var(--error);
-  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
-}
 
 .generate-profile-btn {
   background: var(--primary);
@@ -1518,7 +1514,7 @@ function updateProfileStatus() {
   if (!currentClient || !clientsData[currentClient]) {
     profileStatus.innerHTML = `
       <div class="profile-needed">
-        <span class="status-light red"></span>
+
         <span>No client selected</span>
       </div>
     `;
@@ -1537,7 +1533,7 @@ function updateProfileStatus() {
   } else {
     profileStatus.innerHTML = `
       <div class="profile-needed">
-        <span class="status-light red"></span>
+      
         <span> </span>
         <button class="generate-profile-btn" onclick="generateAIProfile()">
           Generate AI Profile
