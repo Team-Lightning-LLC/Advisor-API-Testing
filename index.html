@@ -1695,6 +1695,84 @@ async function generateAIProfile() {
   const timeSinceLastGeneration = now - lastGenerationTime;
   const activeGenerations = documentQueue.activeGenerations.size;
   
+  if (timeSinceLastGeneration < GENERATION_COOLDOWN) {
+    const remainingTime = Math.ceil((GENERATION_COOLDOWN - timeSinceLastGeneration) / 1000);
+    alert(`Please wait ${remainingTime} more seconds before generating another document.`);
+    return;
+  }
+  
+  if (activeGenerations >= MAX_CONCURRENT_GENERATIONS) {
+    alert(`Maximum of ${MAX_CONCURRENT_GENERATIONS} documents can be generated at once. Please wait for some to complete.`);
+    return;
+  }
+
+  const profileBtn = document.querySelector('.generate-profile-btn, .generate-profile-btn-inline');
+  if (profileBtn) {
+    profileBtn.disabled = true;
+    profileBtn.textContent = 'Generating...';
+  }
+
+  lastGenerationTime = now;
+
+  try {
+    await startVerifiedGeneration('AI Profile', currentClient, 'TESTFinancialProfileGenerator');
+  } catch (error) {
+    console.error('AI Profile generation error:', error);
+    alert('Failed to generate AI Profile. Please try again.');
+  } finally {
+    if (profileBtn) {
+      profileBtn.disabled = false;
+      profileBtn.textContent = profileBtn.classList.contains('generate-profile-btn-inline') ? 'Generate' : 'Generate AI Profile';
+    }
+  }
+}async function generateAIProfile() {
+  if (!currentClient || !clientsData[currentClient]) {
+    alert('Please select a client first');
+    return;
+  }
+
+  // Rate limiting checks
+  const now = Date.now();
+  const timeSinceLastGeneration = now - lastGenerationTime;
+  const activeGenerations = documentQueue.activeGenerations.size;
+  
+  if (timeSinceLastGeneration < GENERATION_COOLDOWN) {
+    const remainingTime = Math.ceil((GENERATION_COOLDOWN - timeSinceLastGeneration) / 1000);
+    alert(`Please wait ${remainingTime} more seconds before generating another document.`);
+    return;
+  }
+  
+  if (activeGenerations >= MAX_CONCURRENT_GENERATIONS) {
+    alert(`Maximum of ${MAX_CONCURRENT_GENERATIONS} documents can be generated at once. Please wait for some to complete.`);
+    return;
+  }
+
+  const profileBtn = document.querySelector('.generate-profile-btn, .generate-profile-btn-inline');
+  if (profileBtn) {
+    profileBtn.disabled = true;
+    profileBtn.textContent = 'Generating...';
+  }
+
+  lastGenerationTime = now;
+
+  try {
+    await startVerifiedGeneration('AI Profile', currentClient, 'TESTFinancialProfileGenerator');
+  } catch (error) {
+    console.error('AI Profile generation error:', error);
+    alert('Failed to generate AI Profile. Please try again.');
+  } finally {
+    if (profileBtn) {
+      profileBtn.disabled = false;
+      profileBtn.textContent = profileBtn.classList.contains('generate-profile-btn-inline') ? 'Generate' : 'Generate AI Profile';
+    }
+  }
+}
+
+  // Rate limiting checks
+  const now = Date.now();
+  const timeSinceLastGeneration = now - lastGenerationTime;
+  const activeGenerations = documentQueue.activeGenerations.size;
+  
   // Check cooldown period
   if (timeSinceLastGeneration < GENERATION_COOLDOWN) {
     const remainingTime = Math.ceil((GENERATION_COOLDOWN - timeSinceLastGeneration) / 1000);
@@ -2397,7 +2475,6 @@ async function generateDocument() {
     return;
   }
   
-  // Check if client has AI profile before generating documents
   if (!checkClientProfile(currentClient)) {
     alert('Please generate an AI Profile for this client first before creating other documents.');
     return;
@@ -2408,14 +2485,12 @@ async function generateDocument() {
   const timeSinceLastGeneration = now - lastGenerationTime;
   const activeGenerations = documentQueue.activeGenerations.size;
   
-  // Check cooldown period
   if (timeSinceLastGeneration < GENERATION_COOLDOWN) {
     const remainingTime = Math.ceil((GENERATION_COOLDOWN - timeSinceLastGeneration) / 1000);
     alert(`Please wait ${remainingTime} more seconds before generating another document.`);
     return;
   }
   
-  // Check concurrent generation limit
   if (activeGenerations >= MAX_CONCURRENT_GENERATIONS) {
     alert(`Maximum of ${MAX_CONCURRENT_GENERATIONS} documents can be generated at once. Please wait for some to complete.`);
     return;
@@ -2429,14 +2504,12 @@ async function generateDocument() {
     return;
   }
   
-  // Update last generation time
   lastGenerationTime = now;
-  
-  // Add to queue with the captured value
-  documentQueue.addGeneration(selectedDocType, currentClient);
-  
-  // Now reset the select
   select.value = '';
+  
+  // Start verified generation
+  await startVerifiedGeneration(selectedDocType, currentClient, 'AdvisorAssistant@2');
+}
   
   try {
     await fetch('https://api.vertesia.io/api/v1/execute/async', {
