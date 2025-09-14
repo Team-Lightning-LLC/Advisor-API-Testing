@@ -1271,7 +1271,7 @@ async function loadClientsFromVertesia() {
     console.log(`Found ${documents.length} documents in Vertesia`);
     
     // Extract unique client names with better logic
-    const clientNames = new Set();
+    const clientNamesMap = new Map(); // Use Map to track normalized names and pick best version
     
     documents.forEach(doc => {
       let clientName = null;
@@ -1282,11 +1282,6 @@ async function loadClientsFromVertesia() {
       }
       // Enhanced extraction from document name
       else if (doc.name) {
-        // Try multiple patterns:
-        // 1. "FirstName LastName - Document.pdf"
-        // 2. "FirstName_LastName_Document.pdf" 
-        // 3. "FirstNameLastName Document.pdf"
-        
         // Pattern 1: Standard " - " format
         if (doc.name.includes(' - ')) {
           clientName = doc.name.split(' - ')[0].trim();
@@ -1301,7 +1296,6 @@ async function loadClientsFromVertesia() {
         }
         // Pattern 3: Look for common name patterns
         else {
-          // Extract likely names from start of filename
           const nameMatch = doc.name.match(/^([A-Z][a-z]+\s+[A-Z][a-z]+)/);
           if (nameMatch) {
             clientName = nameMatch[1];
@@ -1314,24 +1308,36 @@ async function loadClientsFromVertesia() {
         // Remove file extensions and clean up
         clientName = clientName.replace(/\.(pdf|docx?|xlsx?|pptx?)$/i, '').trim();
         
-        // Only add if it looks like a real name (has at least first and last)
+        // Only process if it looks like a real name (has at least first and last)
         if (clientName.includes(' ') && clientName.split(' ').length >= 2) {
-          clientNames.add(clientName);
+          
+          // Normalize the name for comparison (lowercase, single spaces)
+          const normalizedName = clientName.toLowerCase()
+            .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+            .trim();
+          
+          // If we haven't seen this normalized name before, or if this version looks "better"
+          if (!clientNamesMap.has(normalizedName)) {
+            clientNamesMap.set(normalizedName, clientName);
+          } else {
+            // Keep the version with proper capitalization if current one is all lowercase
+            const existing = clientNamesMap.get(normalizedName);
+            if (existing === existing.toLowerCase() && clientName !== clientName.toLowerCase()) {
+              clientNamesMap.set(normalizedName, clientName);
+            }
+          }
         }
       }
     });
     
-    // Convert to clientsData format
+    // Convert to clientsData format using unique normalized names
     clientsData = {};
-    clientNames.forEach(clientName => {
-      const clientId = clientName.toLowerCase()
-        .replace(/[^a-z0-9\s]/g, '')
-        .replace(/\s+/g, '');
-      
-      clientsData[clientId] = { name: clientName };
+    clientNamesMap.forEach((displayName, normalizedName) => {
+      const clientId = normalizedName.replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '');
+      clientsData[clientId] = { name: displayName };
     });
     
-    console.log('Loaded clients:', Object.values(clientsData).map(c => c.name));
+    console.log('Loaded unique clients:', Object.values(clientsData).map(c => c.name));
     
     renderClients();
     
