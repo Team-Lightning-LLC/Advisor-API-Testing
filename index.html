@@ -166,8 +166,33 @@ body {
 .column-body {
   flex: 1;
   padding: 20px 24px;
-  max-height: 800px;
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Optional: Style the scrollbars to match your design */
+.column-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.column-body::-webkit-scrollbar-track {
+  background: var(--soft);
+  border-radius: 4px;
+}
+
+.column-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.column-body::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* For Firefox */
+.column-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--soft);
 }
 
 /* Clients Column */
