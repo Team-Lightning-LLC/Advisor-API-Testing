@@ -919,23 +919,8 @@ dialog::backdrop {
   color: var(--ink);
 }
 
-.cancel-btn {
-  padding: 12px 20px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  background: white;
-  border: 1px solid var(--border);
-  color: var(--ink);
-}
-
-.cancel-btn:hover {
-  background: var(--soft);
-}
-
-.create-btn, .delete-btn {
+/* Button base styles */
+.btn {
   padding: 12px 20px;
   border-radius: 10px;
   cursor: pointer;
@@ -943,31 +928,164 @@ dialog::backdrop {
   font-weight: 600;
   transition: all 0.2s ease;
   border: none;
-  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  outline: none;
 }
 
-.create-btn {
+/* Button variants */
+.btn-primary {
   background: var(--primary);
+  color: white;
+  border: 1px solid var(--primary);
 }
 
-.create-btn:hover:not(:disabled) {
+.btn-primary:hover:not(:disabled) {
   background: var(--primary-dark);
+  border-color: var(--primary-dark);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(51, 111, 81, 0.25);
 }
 
-.delete-btn {
+.btn-secondary {
+  background: white;
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--soft);
+  border-color: var(--muted);
+}
+
+.btn-danger {
   background: var(--error);
+  color: white;
+  border: 1px solid var(--error);
 }
 
-.delete-btn:hover:not(:disabled) {
+.btn-danger:hover:not(:disabled) {
   background: #c82333;
+  border-color: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.25);
 }
 
-.create-btn:disabled, .delete-btn:disabled {
+.btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
+}
+
+/* Modal actions spacing */
+.modal-actions {
+  background: var(--soft);
+  padding: 20px 28px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--hair);
+}
+
+/* Delete modal specific improvements */
+.delete-modal-content {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 80px rgba(0,0,0,.35);
+}
+
+.delete-modal-body {
+  padding: 28px;
+}
+
+.delete-modal-body p {
+  margin-bottom: 16px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+/* Improve the warning box */
+.delete-warning {
+  background: linear-gradient(135deg, #fff3cd 0%, #fef7e0 100%);
+  border: 1px solid #f0d000;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  color: #856404;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+/* Improve document info box */
+.document-info {
+  background: var(--soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+/* Improve checkbox styling */
+.checkbox-container {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.5;
+  gap: 12px;
+  padding: 16px;
+  background: var(--soft);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.checkbox-container:hover {
+  background: rgba(51, 111, 81, 0.05);
+  border-color: var(--primary);
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: all 0.2s ease;
+}
+
+.checkbox-container:hover .checkmark {
+  border-color: var(--primary);
+}
+
+.checkbox-container input:checked + .checkmark {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.checkbox-container input:checked + .checkmark::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 .delete-warning {
