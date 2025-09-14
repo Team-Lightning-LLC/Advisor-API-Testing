@@ -286,6 +286,27 @@ body {
 }
 
 /* AI Profile Status */
+.profile-status-section {
+  background: var(--soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.profile-status-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+
+.profile-icon {
+  font-size: 18px;
+}
 
 .profile-complete {
   display: flex;
@@ -493,6 +514,16 @@ body {
   border-color: var(--primary-dark);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(51, 111, 81, 0.25);
+}
+
+.test-btn {
+  background: var(--info);
+  border-color: var(--info);
+}
+
+.test-btn:hover:not(:disabled) {
+  background: #1e4a7a;
+  border-color: #1e4a7a;
 }
 
 .generator-btn:disabled {
@@ -1149,6 +1180,10 @@ dialog::backdrop {
       </div>
       
       <!-- AI Profile Status Section -->
+      <div class="profile-status-section">
+        <div class="profile-status-header">
+          <span class="profile-icon">👤</span>
+          <span>AI Profile Status</span>
         </div>
         <div id="profileStatus" class="profile-status-content">
           <!-- Will be populated dynamically -->
@@ -1183,6 +1218,7 @@ dialog::backdrop {
           <option value="Compose Correspondence">Compose Correspondence</option>
         </select>
         <button class="generator-btn" id="generateBtn" onclick="generateDocument()">Generate</button>
+        <button class="generator-btn test-btn" id="testApiBtn" onclick="testVertesiaAPI()">Test API Call</button>
       </div>
       
       <div class="queue-section">
