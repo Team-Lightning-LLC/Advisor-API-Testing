@@ -292,11 +292,9 @@ body {
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 24px;
-  display: flex; /* Add this */
-  align-items: left; /* Add this */
-  justify-content: center; /* Add this */
+  /* Remove flex properties */
 }
-
+  
 .profile-status-header {
   display: flex;
   align-items: center;
@@ -324,6 +322,12 @@ body {
   color: var(--warn);
   font-size: 14px;
   line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 60px; /* Give it some height to center within */
 }
 
 
@@ -1135,6 +1139,28 @@ dialog::backdrop {
   .column-body {
     max-height: 400px;
   }
+}
+
+  html, body {
+  height: 100vh;
+  overflow: hidden; /* Prevent page scrolling */
+}
+
+.main-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  gap: 24px;
+  padding: 24px 32px;
+  max-width: 1600px;
+  margin: 0 auto;
+  height: calc(100vh - 144px); /* Make it fill remaining viewport */
+}
+
+.column-body {
+  flex: 1;
+  padding: 20px 24px;
+  overflow-y: auto; /* Only columns scroll */
+  max-height: none; /* Remove the 800px limit */
 }
 </style>
 </head>
