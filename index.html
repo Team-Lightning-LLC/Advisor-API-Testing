@@ -1409,7 +1409,7 @@ function checkClientProfile(clientId) {
   if (!client) return false;
   
   // Convert client name to expected AI profile format: "Client_Name_AI_Profile"
-  const expectedProfileName = client.name.replace(/\s+/g, '_') + '_AIProfile';
+  const expectedProfileName = client.name.replace(/\s+/g, '_') + '_AI_Profile';
   
   // Look for AI profile document with exact naming pattern
   return documentsData.some(doc => 
