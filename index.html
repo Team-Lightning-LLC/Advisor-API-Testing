@@ -1705,11 +1705,15 @@ function renderClients() {
     return;
   }
   
-  Object.keys(clientsData).forEach(clientId => {
-    const client = clientsData[clientId];
+  // Sort clients alphabetically by full name
+  const sortedClients = Object.entries(clientsData).sort((a, b) => 
+    a[1].name.localeCompare(b[1].name)
+  );
+  
+  sortedClients.forEach(([clientId, client]) => {
     const div = document.createElement('div');
     div.className = `client-item ${clientId === currentClient ? 'active' : ''}`;
-    div.textContent = client.name.split(' ')[0];
+    div.textContent = client.name; // Full name instead of just first name
     div.onclick = () => switchClient(clientId);
     clientList.appendChild(div);
   });
