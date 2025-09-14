@@ -1705,15 +1705,35 @@ function renderClients() {
     return;
   }
   
-  // Sort clients alphabetically by full name
-  const sortedClients = Object.entries(clientsData).sort((a, b) => 
-    a[1].name.localeCompare(b[1].name)
-  );
+  // Sort clients alphabetically by last name, then first name
+  const sortedClients = Object.entries(clientsData).sort((a, b) => {
+    const namePartsA = a[1].name.split(' ');
+    const namePartsB = b[1].name.split(' ');
+    
+    const lastNameA = namePartsA[namePartsA.length - 1]; // Get last part as last name
+    const lastNameB = namePartsB[namePartsB.length - 1];
+    
+    // First sort by last name
+    const lastNameCompare = lastNameA.localeCompare(lastNameB);
+    if (lastNameCompare !== 0) return lastNameCompare;
+    
+    // If last names are the same, sort by first name
+    const firstNameA = namePartsA[0];
+    const firstNameB = namePartsB[0];
+    return firstNameA.localeCompare(firstNameB);
+  });
   
   sortedClients.forEach(([clientId, client]) => {
     const div = document.createElement('div');
     div.className = `client-item ${clientId === currentClient ? 'active' : ''}`;
-    div.textContent = client.name; // Full name instead of just first name
+    
+    // Convert "First Last" to "Last, First"
+    const nameParts = client.name.split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts[nameParts.length - 1];
+    const displayName = `${lastName}, ${firstName}`;
+    
+    div.textContent = displayName;
     div.onclick = () => switchClient(clientId);
     clientList.appendChild(div);
   });
