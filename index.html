@@ -2162,58 +2162,64 @@ async function viewDocument(id) {
     }
     
     const objectData = await objectResponse.json();
-    console.log('Document type:', objectData.content?.type);
     
-    // Check if this is a markdown document (processed by Vertesia)
-    const isMarkdown = objectData.content?.type === 'text/markdown';
+    // Debug logging to see what Vertesia is returning
+    console.log('Full object data:', objectData);
+    console.log('Content type:', objectData.content?.type);
+    console.log('Document name:', doc.name);
     
-    if (isMarkdown) {
-      // Handle markdown documents (our formatted viewer)
-      const fileUri = objectData.content?.source;
+    const fileUri = objectData.content?.source;
+    if (!fileUri) {
+      throw new Error('No file source found in object');
+    }
+    
+    // Get the download URL
+    const downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
+      method: 'POST',
+      headers: { 
+        'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ "file": fileUri })
+    });
+    
+    if (!downloadResponse.ok) {
+      throw new Error(`Failed to get download URL: ${downloadResponse.status}`);
+    }
+    
+    const downloadData = await downloadResponse.json();
+    
+    // Fetch the content to see what we actually get
+    const contentResponse = await fetch(downloadData.url);
+    const contentType = contentResponse.headers.get('content-type');
+    console.log('Actual content type from URL:', contentType);
+    
+    // Check if it's text-based content (markdown, HTML, plain text)
+    if (contentType?.includes('text/') || 
+        objectData.content?.type === 'text/markdown' ||
+        objectData.content?.type?.includes('text/')) {
       
-      if (!fileUri) {
-        throw new Error('No file source found in object');
+      const textContent = await contentResponse.text();
+      console.log('Text content preview:', textContent.substring(0, 500));
+      
+      // Try to determine if it's markdown
+      if (textContent.includes('# ') || textContent.includes('## ') || 
+          objectData.content?.type === 'text/markdown') {
+        console.log('Treating as markdown');
+        openFormattedViewer(textContent, doc.name);
+      } else {
+        console.log('Treating as plain text/HTML');
+        // Display as plain text or HTML
+        const dlg = document.getElementById('viewer');
+        document.getElementById('viewerTitle').textContent = doc.name;
+        const viewerFrame = document.getElementById('viewerFrame');
+        viewerFrame.outerHTML = `<div id="viewerFrame" class="viewer-content"><pre style="white-space: pre-wrap; font-family: inherit;">${textContent}</pre></div>`;
+        dlg.showModal();
       }
-      
-      const downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
-        method: 'POST',
-        headers: { 
-          'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ "file": fileUri })
-      });
-      
-      if (!downloadResponse.ok) {
-        throw new Error(`Failed to get download URL: ${downloadResponse.status}`);
-      }
-      
-      const downloadData = await downloadResponse.json();
-      const textResponse = await fetch(downloadData.url);
-      const markdownContent = await textResponse.text();
-      
-      openFormattedViewer(markdownContent, doc.name);
       
     } else {
-      // Handle PDF/Office documents (use iframe viewer)
-      const fileUri = objectData.content?.source;
-      
-      const downloadResponse = await fetch('https://api.vertesia.io/api/v1/objects/download-url', {
-        method: 'POST',
-        headers: { 
-          'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ "file": fileUri })
-      });
-      
-      if (!downloadResponse.ok) {
-        throw new Error(`Failed to get download URL: ${downloadResponse.status}`);
-      }
-      
-      const downloadData = await downloadResponse.json();
-      
-      // Open PDF/Office docs in regular iframe
+      console.log('Treating as binary file, opening in iframe');
+      // For PDFs and other binary files
       openViewer(downloadData.url, doc.name);
     }
     
