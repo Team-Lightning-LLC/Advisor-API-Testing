@@ -3271,7 +3271,16 @@ dialog::backdrop {
         <input type="file" class="upload-input" id="fileUpload" onchange="handleFileUpload(event)" multiple accept=".pdf,.doc,.docx,.xlsx,.ppt,.pptx">
         <div class="upload-text">Drop files here or click to upload</div>
       </div>
-      
+      <!-- AI Profile Status Section -->
+<div class="profile-status-section">
+  <div class="profile-status-header">
+    <span class="profile-icon">👤</span>
+    <span>AI Profile Status</span>
+  </div>
+  <div id="profileStatus" class="profile-status-content">
+    <!-- Will be populated dynamically -->
+  </div>
+</div>
       <div class="doc-controls">
         <input type="text" class="search-bar" id="searchBar" placeholder="Search documents..." onkeyup="searchDocuments()">
         <span class="doc-control" onclick="sortDocuments()">Sort by Date</span>
