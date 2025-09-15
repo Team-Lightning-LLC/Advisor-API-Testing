@@ -2545,6 +2545,8 @@ function generateFileName(clientName, originalFileName) {
   return `${firstName}_${lastName}_${abbreviatedTitle}.${extension}`;
 }
 
+let refreshInterval = null;
+
 async function handleFileUpload(event) {
   const files = Array.from(event.target.files);
   if (files.length === 0) return;
@@ -2555,6 +2557,73 @@ async function handleFileUpload(event) {
   }
   
   const clientName = clientsData[currentClient].name;
+  
+  try {
+    for (const file of files) {
+      const newFileName = generateFileName(clientName, file.name);
+      await uploadSingleFile({ file, newFileName, clientName, originalName: file.name });
+    }
+    
+    // Show success notification
+    showUploadToast(files);
+    
+    // Start auto-refresh every 10 seconds
+    startDocumentRefresh();
+    
+  } catch (error) {
+    console.error('Upload error:', error);
+    alert(`Upload failed: ${error.message}`);
+  }
+  
+  event.target.value = '';
+}
+
+function showUploadToast(files) {
+  const toast = document.getElementById('uploadToast');
+  const toastBody = document.getElementById('toastBody');
+  
+  const fileNames = files.map(f => f.name).join(', ');
+  toastBody.innerHTML = `
+    <strong>${files.length} file(s) uploaded:</strong><br>
+    ${fileNames}<br><br>
+    <em>Processing may take 1-2 minutes. Documents will appear automatically.</em>
+  `;
+  
+  toast.classList.add('show');
+  
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    hideUploadToast();
+  }, 7000);
+}
+
+function hideUploadToast() {
+  const toast = document.getElementById('uploadToast');
+  toast.classList.remove('show');
+}
+
+function startDocumentRefresh() {
+  // Clear any existing interval
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+  }
+  
+  // Refresh every 10 seconds for 2 minutes
+  let refreshCount = 0;
+  const maxRefreshes = 12; // 2 minutes worth
+  
+  refreshInterval = setInterval(() => {
+    if (currentClient) {
+      loadClientDocuments(currentClient);
+      refreshCount++;
+      
+      if (refreshCount >= maxRefreshes) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+      }
+    }
+  }, 10000);
+}
   
   // Add files to background queue
   files.forEach(file => {
@@ -3078,6 +3147,15 @@ function cancelDocumentDelete() {
 // Initialize on page load
 window.onload = init;
 </script>
-
+<!-- Toast Notification -->
+<div id="uploadToast" class="upload-toast">
+  <div class="toast-content">
+    <div class="toast-header">
+      <span class="toast-title">Files Uploaded</span>
+      <button class="toast-close" onclick="hideUploadToast()">×</button>
+    </div>
+    <div class="toast-body" id="toastBody"></div>
+  </div>
+</div>
 </body>
 </html>
