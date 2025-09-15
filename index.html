@@ -1396,6 +1396,46 @@ dialog::backdrop {
     max-height: 400px;
   }
 }
+  /* Right Panel Upload Styles */
+.upload-section-right {
+  border-top: 1px solid var(--hair);
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.upload-area-right {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  margin-bottom: 20px;
+  background: var(--soft);
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.upload-area-right:hover {
+  border-color: var(--primary);
+  background: rgba(51, 111, 81, 0.02);
+}
+
+.upload-area-right .upload-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.upload-text-right {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  pointer-events: none;
+}
 </style>
 </head>
 <body>
@@ -1432,12 +1472,12 @@ dialog::backdrop {
 
   <!-- Documents Column -->
 <div class="column documents-column">
-  <div class="column-header" id="documentsHeader">
-    <span>Documents</span>
-    <div id="profileStatus" class="profile-status-inline">
-      <!-- Will be populated dynamically -->
-    </div>
+<div class="column-header" id="documentsHeader">
+  <span>Documents</span>
+  <div id="profileStatus" class="profile-status-inline">
+    <!-- Will be populated dynamically -->
   </div>
+</div>
   <div class="column-body">
     <div class="upload-area">
       <input type="file" class="upload-input" id="fileUpload" onchange="handleFileUpload(event)" multiple accept=".pdf,.doc,.docx,.xlsx,.ppt,.pptx">
@@ -1455,31 +1495,46 @@ dialog::backdrop {
     <div class="doc-list" id="documentsList"></div>
   </div>
 </div>
-  <!-- Generate Column -->
-  <div class="column generate-column">
-    <div class="column-header">Generate</div>
-    <div class="column-body">
-      <div class="generator-form">
-        <select class="generator-select" id="docTypeSelect">
-          <option value="">Select document type...</option>
-          <option value="Portfolio Analysis">Portfolio Analysis</option>
-          <option value="15 min Meeting Preparation">15 min Meeting Preparation</option>
-          <option value="45 min Meeting Preparation">45 min Meeting Preparation</option>
-          <option value="Quarterly Report">Quarterly Report</option>
-          <option value="Tax Planning">Tax Planning Document</option>
-          <option value="Retirement Planning">Retirement Planning</option>
-          <option value="Client Current State">Client Current State</option>
-          <option value="Risk Assessment">Risk Assessment</option>
-          <option value="Compose Correspondence">Compose Correspondence</option>
-        </select>
-        <button class="generator-btn" id="generateBtn" onclick="generateDocument()">Generate</button>
-      </div>
-      
-      <div class="queue-section">
-        <div class="queue-header">In Queue</div>
-        <div id="queueItems"></div>
+<!-- Generate & Upload Column -->
+<div class="column generate-column">
+  <div class="column-header">Generate & Upload</div>
+  <div class="column-body">
+    
+    <!-- Generation Section -->
+    <div class="generator-form">
+      <select class="generator-select" id="docTypeSelect">
+        <option value="">Select document type...</option>
+        <option value="Portfolio Analysis">Portfolio Analysis</option>
+        <option value="15 min Meeting Preparation">15 min Meeting Preparation</option>
+        <option value="45 min Meeting Preparation">45 min Meeting Preparation</option>
+        <option value="Quarterly Report">Quarterly Report</option>
+        <option value="Tax Planning">Tax Planning Document</option>
+        <option value="Retirement Planning">Retirement Planning</option>
+        <option value="Client Current State">Client Current State</option>
+        <option value="Risk Assessment">Risk Assessment</option>
+        <option value="Compose Correspondence">Compose Correspondence</option>
+      </select>
+      <button class="generator-btn" id="generateBtn" onclick="generateDocument()">Generate</button>
+    </div>
+    
+    <div class="queue-section">
+      <div class="queue-header">Generation Queue (<span id="generationActiveCount">0</span>/5)</div>
+      <div id="queueItems"></div>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="upload-section-right">
+      <div class="upload-area-right">
+        <input type="file" class="upload-input" id="fileUpload" onchange="handleFileUpload(event)" multiple accept=".pdf,.doc,.docx,.xlsx,.ppt,.pptx">
+        <div class="upload-text-right">Drop files here or click to upload</div>
       </div>
     </div>
+
+    <div class="queue-section">
+      <div class="queue-header">Upload Queue (<span id="uploadQueueCount">0</span>)</div>
+      <div id="uploadQueueItems"></div>
+    </div>
+    
   </div>
 </div>
 
