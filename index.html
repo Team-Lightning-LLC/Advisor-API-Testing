@@ -1436,6 +1436,108 @@ dialog::backdrop {
   font-weight: 500;
   pointer-events: none;
 }
+  /* Action Sections */
+.action-section {
+  background: var(--card);
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.action-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-header {
+  background: var(--soft);
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--hair);
+}
+
+.generate-section .generator-form {
+  padding: 16px;
+  border-bottom: 1px solid var(--hair);
+}
+
+.upload-section .upload-area-right {
+  margin: 16px;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  background: var(--soft);
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.upload-section .upload-area-right:hover {
+  border-color: var(--primary);
+  background: rgba(51, 111, 81, 0.02);
+}
+
+.upload-area-right .upload-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.upload-text-right {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.queue-header {
+  background: var(--bg);
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  border-top: 1px solid var(--hair);
+}
+
+.queue-container {
+  max-height: 150px;
+  overflow-y: auto;
+  min-height: 50px;
+  padding: 8px;
+}
+
+.queue-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.queue-container::-webkit-scrollbar-track {
+  background: var(--soft);
+  border-radius: 3px;
+}
+
+.queue-container::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.queue-container::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+.empty-queue {
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+  padding: 20px 10px;
+  font-size: 12px;
+}
 </style>
 </head>
 <body>
@@ -1496,43 +1598,48 @@ dialog::backdrop {
   </div>
 </div>
 <!-- Generate & Upload Column -->
+<!-- Generate & Upload Column -->
 <div class="column generate-column">
   <div class="column-header">Generate & Upload</div>
   <div class="column-body">
     
-    <!-- Generation Section -->
-    <div class="generator-form">
-      <select class="generator-select" id="docTypeSelect">
-        <option value="">Select document type...</option>
-        <option value="Portfolio Analysis">Portfolio Analysis</option>
-        <option value="15 min Meeting Preparation">15 min Meeting Preparation</option>
-        <option value="45 min Meeting Preparation">45 min Meeting Preparation</option>
-        <option value="Quarterly Report">Quarterly Report</option>
-        <option value="Tax Planning">Tax Planning Document</option>
-        <option value="Retirement Planning">Retirement Planning</option>
-        <option value="Client Current State">Client Current State</option>
-        <option value="Risk Assessment">Risk Assessment</option>
-        <option value="Compose Correspondence">Compose Correspondence</option>
-      </select>
-      <button class="generator-btn" id="generateBtn" onclick="generateDocument()">Generate</button>
-    </div>
-    
-    <div class="queue-section">
+    <!-- Generate Section -->
+    <div class="action-section generate-section">
+      <div class="section-header">Generate</div>
+      <div class="generator-form">
+        <select class="generator-select" id="docTypeSelect">
+          <option value="">Select document type...</option>
+          <option value="Portfolio Analysis">Portfolio Analysis</option>
+          <option value="15 min Meeting Preparation">15 min Meeting Preparation</option>
+          <option value="45 min Meeting Preparation">45 min Meeting Preparation</option>
+          <option value="Quarterly Report">Quarterly Report</option>
+          <option value="Tax Planning">Tax Planning Document</option>
+          <option value="Retirement Planning">Retirement Planning</option>
+          <option value="Client Current State">Client Current State</option>
+          <option value="Risk Assessment">Risk Assessment</option>
+          <option value="Compose Correspondence">Compose Correspondence</option>
+        </select>
+        <button class="generator-btn" id="generateBtn" onclick="generateDocument()">Generate</button>
+      </div>
+      
       <div class="queue-header">Generation Queue (<span id="generationActiveCount">0</span>/5)</div>
-      <div id="queueItems"></div>
+      <div class="queue-container" id="queueItems">
+        <div class="empty-queue">No documents generating</div>
+      </div>
     </div>
 
     <!-- Upload Section -->
-    <div class="upload-section-right">
+    <div class="action-section upload-section">
+      <div class="section-header">Upload</div>
       <div class="upload-area-right">
         <input type="file" class="upload-input" id="fileUpload" onchange="handleFileUpload(event)" multiple accept=".pdf,.doc,.docx,.xlsx,.ppt,.pptx">
         <div class="upload-text-right">Drop files here or click to upload</div>
       </div>
-    </div>
-
-    <div class="queue-section">
+      
       <div class="queue-header">Upload Queue (<span id="uploadQueueCount">0</span>)</div>
-      <div id="uploadQueueItems"></div>
+      <div class="queue-container" id="uploadQueueItems">
+        <div class="empty-queue">No files uploading</div>
+      </div>
     </div>
     
   </div>
