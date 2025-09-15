@@ -823,6 +823,7 @@ dialog::backdrop {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px 12px 0 0; /* Add this line */
 }
 
 .delete-modal-header h3 {
@@ -1499,7 +1500,7 @@ dialog::backdrop {
     </div>
     <div class="modal-body">
       <div class="delete-warning">
-        <strong>⚠️ This action cannot be undone.</strong>
+        <strong> This action <b>cannot</b>b be undone.</strong>
       </div>
       <p> </p>
       <div class="document-info">
