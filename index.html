@@ -1650,47 +1650,44 @@ dialog::backdrop {
 </div>
 <!-- Generate & Upload Column -->
 <!-- Generate & Upload Column -->
+<!-- Generate & Upload Column -->
 <div class="column generate-column">
   <div class="column-header">Generate & Upload</div>
   <div class="column-body">
     
     <!-- Generate Section -->
-    <div class="action-section generate-section">
-      <div class="section-header">Generate</div>
-      <div class="generator-form">
-        <select class="generator-select" id="docTypeSelect">
-          <option value="">Select document type...</option>
-          <option value="Portfolio Analysis">Portfolio Analysis</option>
-          <option value="15 min Meeting Preparation">15 min Meeting Preparation</option>
-          <option value="45 min Meeting Preparation">45 min Meeting Preparation</option>
-          <option value="Quarterly Report">Quarterly Report</option>
-          <option value="Tax Planning">Tax Planning Document</option>
-          <option value="Retirement Planning">Retirement Planning</option>
-          <option value="Client Current State">Client Current State</option>
-          <option value="Risk Assessment">Risk Assessment</option>
-          <option value="Compose Correspondence">Compose Correspondence</option>
-        </select>
-        <button class="generator-btn" id="generateBtn" onclick="generateDocument()">Generate</button>
-      </div>
-      
+    <div class="generator-form">
+      <select class="generator-select" id="docTypeSelect">
+        <option value="">Select document type...</option>
+        <option value="Portfolio Analysis">Portfolio Analysis</option>
+        <option value="15 min Meeting Preparation">15 min Meeting Preparation</option>
+        <option value="45 min Meeting Preparation">45 min Meeting Preparation</option>
+        <option value="Quarterly Report">Quarterly Report</option>
+        <option value="Tax Planning">Tax Planning Document</option>
+        <option value="Retirement Planning">Retirement Planning</option>
+        <option value="Client Current State">Client Current State</option>
+        <option value="Risk Assessment">Risk Assessment</option>
+        <option value="Compose Correspondence">Compose Correspondence</option>
+      </select>
+      <button class="generator-btn" id="generateBtn" onclick="generateDocument()">Generate</button>
+    </div>
+    
+    <div class="queue-section">
       <div class="queue-header">Generation Queue (<span id="generationActiveCount">0</span>/5)</div>
-      <div class="queue-container" id="queueItems">
-        <div class="empty-queue">No documents generating</div>
-      </div>
+      <div id="queueItems"></div>
     </div>
 
     <!-- Upload Section -->
-    <div class="action-section upload-section">
-      <div class="section-header">Upload</div>
+    <div class="upload-section-right">
       <div class="upload-area-right">
         <input type="file" class="upload-input" id="fileUpload" onchange="handleFileUpload(event)" multiple accept=".pdf,.doc,.docx,.xlsx,.ppt,.pptx">
         <div class="upload-text-right">Drop files here or click to upload</div>
       </div>
-      
+    </div>
+
+    <div class="upload-queue-section">
       <div class="queue-header">Upload Queue (<span id="uploadQueueCount">0</span>)</div>
-      <div class="queue-container" id="uploadQueueItems">
-        <div class="empty-queue">No files uploading</div>
-      </div>
+      <div id="uploadQueueItems"></div>
     </div>
     
   </div>
