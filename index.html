@@ -2106,38 +2106,45 @@ class DocumentQueue {
   }
   
   // FIX: Make this a proper method of the class
-  updateQueueDisplay() {
-    const itemsElement = document.getElementById('queueItems');
-    const queueHeader = document.querySelector('.queue-header');
-    
-    // Update header to show current status
-    const activeCount = this.activeGenerations.size;
-    queueHeader.textContent = `In Queue (${activeCount}/${MAX_CONCURRENT_GENERATIONS})`;
-    
-    itemsElement.innerHTML = '';
-    
-    this.activeGenerations.forEach(generation => {
-      const elapsed = Date.now() - generation.startTime;
-      const remaining = Math.max(0, generation.estimatedDuration - elapsed);
-      const minutes = Math.floor(remaining / 60000);
-      const seconds = Math.floor((remaining % 60000) / 1000);
-      
-      const div = document.createElement('div');
-      div.className = 'queue-item';
-      div.innerHTML = `
-        <div class="spinner"></div>
-        <div class="queue-item-content">
-          <div class="queue-item-name">${generation.docType}</div>
-          <div class="queue-item-client">${generation.clientName}</div>
-        </div>
-        <span class="queue-timer">${minutes}:${seconds.toString().padStart(2, '0')}</span>
-        <button class="queue-cancel" onclick="documentQueue.removeGeneration(${generation.id})">✕</button>
-      `;
-      itemsElement.appendChild(div);
-    });
+function updateUploadQueueDisplay() {
+  const countElement = document.getElementById('uploadQueueCount');
+  const itemsElement = document.getElementById('uploadQueueItems');
+  
+  if (!countElement || !itemsElement) {
+    console.error('Upload queue elements not found in DOM');
+    return;
   }
+  
+  countElement.textContent = uploadQueue.length;
+  itemsElement.innerHTML = '';
+  
+  if (uploadQueue.length === 0) {
+    itemsElement.innerHTML = '<div class="empty-queue">No files uploading</div>';
+    return;
+  }
+  
+  uploadQueue.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'queue-item';
+    
+    let statusIcon = '';
+    if (item.status === 'processing') statusIcon = '<div class="spinner"></div>';
+    else if (item.status === 'completed') statusIcon = '✓';
+    else if (item.status === 'failed') statusIcon = '✗';
+    else statusIcon = '⏳';
+    
+    div.innerHTML = `
+      ${statusIcon}
+      <div class="queue-item-content">
+        <div class="queue-item-name">${item.newName}</div>
+        <div class="queue-item-client">${item.clientName}</div>
+      </div>
+    `;
+    itemsElement.appendChild(div);
+  });
+  
+  console.log('Updated upload queue display with', uploadQueue.length, 'items');
 }
-
 
 const documentQueue = new DocumentQueue();
 // Viewer Functions
