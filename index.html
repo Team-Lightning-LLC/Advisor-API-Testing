@@ -1575,7 +1575,12 @@ let currentClient = null;
 let sortOrder = 'desc';
 let documentsVisible = true;
 let selectedFiles = [];
-
+  
+// Upload Queue Variables (background processing)
+let uploadQueue = [];
+let isUploadProcessing = false;
+let uploadQueueId = 0;
+  
 // Load clients dynamically from Vertesia
 async function loadClientsFromVertesia() {
   try {
@@ -2398,8 +2403,30 @@ body: JSON.stringify({
 }
 
 // File upload
+function generateFileName(clientName, originalFileName) {
+  if (!clientName.trim()) return originalFileName;
+  
+  const nameParts = clientName.trim().split(' ');
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts[1] || '';
+  
+  // Remove extension from original file
+  const fileNameWithoutExt = originalFileName.replace(/\.[^/.]+$/, '');
+  const extension = originalFileName.split('.').pop();
+  
+  // Create abbreviated document title (first 3 words, max 20 chars)
+  const abbreviatedTitle = fileNameWithoutExt
+    .split(' ')
+    .slice(0, 3)
+    .join('_')
+    .substring(0, 20)
+    .replace(/[^a-zA-Z0-9_]/g, '');
+  
+  return `${firstName}_${lastName}_${abbreviatedTitle}.${extension}`;
+}
+
 async function handleFileUpload(event) {
-  const files = event.target.files;
+  const files = Array.from(event.target.files);
   if (files.length === 0) return;
   
   if (!currentClient || !clientsData[currentClient]) {
@@ -2407,105 +2434,122 @@ async function handleFileUpload(event) {
     return;
   }
   
-  const uploadArea = document.querySelector('.upload-area');
-  uploadArea.style.background = 'rgba(51, 111, 81, 0.02)';
-  uploadArea.style.borderColor = '#336F51';
+  const clientName = clientsData[currentClient].name;
   
-  try {
-    for (const file of files) {
-      const clientName = clientsData[currentClient].name;
-      const fileName = `${clientName} - ${file.name}`;
-      
-      console.log(`Step 1: Getting upload URL for: ${fileName}`);
-      
-      // Step 1: Get upload URL from Vertesia
-      const urlResponse = await fetch('https://api.vertesia.io/api/v1/objects/upload-url', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9'
-        },
-        body: JSON.stringify({
-          "name": fileName,
-          "mime_type": file.type || "application/pdf"
-        })
-      });
-      
-      if (!urlResponse.ok) {
-        throw new Error(`Failed to get upload URL: ${urlResponse.status}`);
-      }
-      
-      const uploadData = await urlResponse.json();
-      console.log('Step 1 complete. Upload data:', uploadData);
-      
-      // Step 2: Upload to Google Cloud Storage
-      console.log(`Step 2: Uploading ${file.size} bytes to GCS...`);
-      
-      const fileUploadResponse = await fetch(uploadData.url, {
-        method: 'PUT',
-        body: file
-      });
-      
-      console.log('Upload response status:', fileUploadResponse.status);
-      
-      if (!fileUploadResponse.ok) {
-        const errorText = await fileUploadResponse.text();
-        console.error('Upload error response:', errorText);
-        throw new Error(`Failed to upload file: ${fileUploadResponse.status}`);
-      }
-      
-      console.log('Step 2 complete - file uploaded to GCS');
-      
-      // Step 3: Create the content object in Vertesia
-      console.log('Step 3: Creating content object in Vertesia...');
-      
-      const createObjectResponse = await fetch('https://api.vertesia.io/api/v1/objects', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9'
-        },
-        body: JSON.stringify({
-          "name": fileName,
-          "description": `Document uploaded for ${clientName}`,
-          "content": {
-            "source": `gs://store_prod_dd0d3a_2ca798/${uploadData.id}`,
-            "type": file.type || "application/pdf",
-            "name": file.name
-          },
-          "properties": {
-            "client": clientName,
-            "uploaded_at": new Date().toISOString()
-          }
-        })
-      });
-      
-      if (!createObjectResponse.ok) {
-        const errorText = await createObjectResponse.text();
-        console.error('Create object error:', errorText);
-        throw new Error(`Failed to create object: ${createObjectResponse.status}`);
-      }
-      
-      const createdObject = await createObjectResponse.json();
-      console.log('Step 3 complete - object created:', createdObject);
-    }
-    
-    // Refresh the document list
-    setTimeout(() => loadClientDocuments(currentClient), 1000);
-    alert(`Successfully uploaded ${files.length} file(s)`);
-    
-  } catch (error) {
-    console.error('Upload error:', error);
-    alert(`Upload failed: ${error.message}`);
-  } finally {
-    setTimeout(() => {
-      uploadArea.style.background = '';
-      uploadArea.style.borderColor = '';
-    }, 1000);
-    event.target.value = '';
-  }
+  // Add files to background queue
+  files.forEach(file => {
+    const newFileName = generateFileName(clientName, file.name);
+    uploadQueue.push({
+      id: ++uploadQueueId,
+      file: file,
+      originalName: file.name,
+      newName: newFileName,
+      clientName: clientName
+    });
+  });
+  
+  // Start processing immediately in background
+  processUploadQueue();
+  
+  // Schedule refresh based on number of files
+  const refreshDelay = Math.max(files.length * 3000, 10000); // 3 seconds per file, minimum 10 seconds
+  setTimeout(() => {
+    loadClientDocuments(currentClient);
+  }, refreshDelay);
+  
+  alert(`${files.length} file(s) added to upload queue. They will be processed in the background.`);
+  event.target.value = '';
 }
 
+async function processUploadQueue() {
+  if (isUploadProcessing || uploadQueue.length === 0) return;
+  
+  isUploadProcessing = true;
+  
+  while (uploadQueue.length > 0) {
+    const queueItem = uploadQueue.shift();
+    
+    try {
+      await uploadSingleFile(queueItem);
+      console.log(`Successfully uploaded: ${queueItem.newName}`);
+    } catch (error) {
+      console.error(`Failed to upload: ${queueItem.newName}`, error);
+    }
+    
+    // 3-5 second delay between uploads
+    if (uploadQueue.length > 0) {
+      const delay = 3000 + Math.random() * 2000;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  isUploadProcessing = false;
+}
+
+async function uploadSingleFile(queueItem) {
+  const file = queueItem.file;
+  const fileName = queueItem.newName;
+  
+  // Step 1: Get upload URL
+  const urlResponse = await fetch('https://api.vertesia.io/api/v1/objects/upload-url', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9'
+    },
+    body: JSON.stringify({
+      "name": fileName,
+      "mime_type": file.type || "application/pdf"
+    })
+  });
+  
+  if (!urlResponse.ok) {
+    throw new Error(`Failed to get upload URL: ${urlResponse.status}`);
+  }
+  
+  const uploadData = await urlResponse.json();
+  
+  // Step 2: Upload to Google Cloud Storage
+  const fileUploadResponse = await fetch(uploadData.url, {
+    method: 'PUT',
+    body: file
+  });
+  
+  if (!fileUploadResponse.ok) {
+    throw new Error(`Failed to upload file: ${fileUploadResponse.status}`);
+  }
+  
+  // Step 3: Create the content object in Vertesia (FIXED)
+  const createObjectResponse = await fetch('https://api.vertesia.io/api/v1/objects', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer sk-544583102491bf69b0351418bbdd2aa9'
+    },
+    body: JSON.stringify({
+      "name": fileName,
+      "description": `Document uploaded for ${queueItem.clientName}`,
+      "content": {
+        "source": uploadData.id,  // FIXED: Use the id directly
+        "type": file.type || "application/pdf",
+        "name": fileName
+      },
+      "properties": {
+        "client": queueItem.clientName,
+        "original_name": queueItem.originalName,
+        "uploaded_at": new Date().toISOString()
+      }
+    })
+  });
+  
+  if (!createObjectResponse.ok) {
+    const errorText = await createObjectResponse.text();
+    throw new Error(`Failed to create object: ${createObjectResponse.status}`);
+  }
+  
+  return await createObjectResponse.json();
+}
+  
 // Generate document - Updated with AI Profile check
 async function generateDocument() {
   if (!currentClient || !clientsData[currentClient]) {
