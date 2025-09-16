@@ -107,7 +107,7 @@ body {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
   color: #fff;
   padding: 24px 32px;
-  margin-top: 72px;
+  margin-top: 120px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1538,6 +1538,17 @@ dialog::backdrop {
   padding: 20px 10px;
   font-size: 12px;
 }
+  
+<!-- Secondary Nav -->
+  <nav class="secondary-nav">
+    <div class="secondary-links">
+      <div class="secondary-link">Dashboard</div>
+      <div class="secondary-link">Generate</div>
+      <div class="secondary-link">Research</div>
+      <div class="secondary-link">Assistant</div>
+    </div>
+     </nav>
+  
 </style>
 </head>
 <body>
@@ -1558,6 +1569,12 @@ dialog::backdrop {
 </div>
 
 <div class="main-layout">
+  <!-- secondary Nav -->
+   .secondary-nav{background:#fff;border-bottom:1px solid var(--border);padding:0 32px;height:48px;display:flex;align-items:center;justify-content:space-between;position:fixed;left:0;right:0;top:72px;z-index:999}
+  .secondary-links{display:flex;gap:32px;font-size:14px}
+  .secondary-link{cursor:pointer;padding:12px 0}
+  .secondary-link:hover{color:var(--primary)}
+  
   <!-- Clients Column -->
   <div class="column clients-column">
     <div class="column-header">
