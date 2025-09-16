@@ -2216,6 +2216,46 @@ class DocumentQueue {
     this.updateQueueDisplay();
   }
   
+  updateQueueDisplay() {
+    const itemsElement = document.getElementById('queueItems');
+    const queueHeaderElement = document.querySelector('.queue-header');
+    const queueContainer = queueHeaderElement.parentElement;
+    
+    const activeCount = this.activeGenerations.size;
+    
+    if (activeCount === 0) {
+      queueContainer.style.display = 'none';
+    } else {
+      queueContainer.style.display = 'block';
+      queueHeaderElement.textContent = `Generation Queue (${activeCount}/${MAX_CONCURRENT_GENERATIONS})`;
+      
+      itemsElement.innerHTML = '';
+      
+      this.activeGenerations.forEach(generation => {
+        const elapsed = Date.now() - generation.startTime;
+        const remaining = Math.max(0, generation.estimatedDuration - elapsed);
+        const minutes = Math.floor(remaining / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        
+        const div = document.createElement('div');
+        div.className = 'queue-item';
+        div.innerHTML = `
+          <div class="spinner"></div>
+          <div class="queue-item-content">
+            <div class="queue-item-name">${generation.docType}</div>
+            <div class="queue-item-client">${generation.clientName}</div>
+          </div>
+          <span class="queue-timer">${minutes}:${seconds.toString().padStart(2, '0')}</span>
+          <button class="queue-cancel" onclick="documentQueue.removeGeneration(${generation.id})">✕</button>
+        `;
+        itemsElement.appendChild(div);
+      });
+    }
+  }
+} // <- This closing brace was missing!
+
+const documentQueue = new DocumentQueue();
+  
   // FIX: Make this a proper method of the class
 updateQueueDisplay() {
   const itemsElement = document.getElementById('queueItems');
