@@ -2217,13 +2217,20 @@ class DocumentQueue {
   }
   
   // FIX: Make this a proper method of the class
-  updateQueueDisplay() {
-    const itemsElement = document.getElementById('queueItems');
-    const queueHeader = document.querySelector('.queue-header');
-    
-    // Update header to show current status
-    const activeCount = this.activeGenerations.size;
-    queueHeader.textContent = `In Queue (${activeCount}/${MAX_CONCURRENT_GENERATIONS})`;
+updateQueueDisplay() {
+  const itemsElement = document.getElementById('queueItems');
+  const queueHeaderElement = document.querySelector('.queue-header');
+  const queueContainer = queueHeaderElement.parentElement; // The entire queue section
+  
+  const activeCount = this.activeGenerations.size;
+  
+  if (activeCount === 0) {
+    // Hide the entire queue section when empty
+    queueContainer.style.display = 'none';
+  } else {
+    // Show the queue section when there are items
+    queueContainer.style.display = 'block';
+    queueHeaderElement.textContent = `Generation Queue (${activeCount}/${MAX_CONCURRENT_GENERATIONS})`;
     
     itemsElement.innerHTML = '';
     
@@ -2251,6 +2258,37 @@ class DocumentQueue {
 
 
 const documentQueue = new DocumentQueue();
+  
+  // Hidden Queues
+function updateUploadQueueDisplay() {
+  const uploadQueueElement = document.getElementById('uploadQueueItems');
+  const uploadHeaderElement = uploadQueueElement.previousElementSibling; // The upload queue header
+  const uploadSection = uploadHeaderElement.parentElement; // The upload queue container
+  
+  const uploadCount = uploadQueue.length + (isUploadProcessing ? 1 : 0);
+  
+  if (uploadCount === 0) {
+    // Hide upload queue section when empty
+    uploadSection.querySelector('.queue-header').style.display = 'none';
+    uploadSection.querySelector('.queue-container').style.display = 'none';
+  } else {
+    // Show upload queue section when there are items
+    uploadSection.querySelector('.queue-header').style.display = 'block';
+    uploadSection.querySelector('.queue-container').style.display = 'block';
+    uploadHeaderElement.textContent = `Upload Queue (${uploadCount})`;
+    
+    // Update the content (you can enhance this to show actual upload progress)
+    if (uploadCount > 0) {
+      uploadQueueElement.innerHTML = `<div class="queue-item">
+        <div class="spinner"></div>
+        <div class="queue-item-content">
+          <div class="queue-item-name">Processing uploads...</div>
+          <div class="queue-item-client">${uploadCount} file(s) remaining</div>
+        </div>
+      </div>`;
+    }
+  }
+}
 // Viewer Functions
 function openFormattedViewer(markdownContent, title) {
   const dlg = document.getElementById('viewer');
@@ -2692,13 +2730,16 @@ async function handleFileUpload(event) {
   event.target.value = '';
 }
 
+// Add this call to your processUploadQueue function
 async function processUploadQueue() {
   if (isUploadProcessing || uploadQueue.length === 0) return;
   
   isUploadProcessing = true;
+  updateUploadQueueDisplay(); // Add this line
   
   while (uploadQueue.length > 0) {
     const queueItem = uploadQueue.shift();
+    updateUploadQueueDisplay(); // Add this line
     
     try {
       await uploadSingleFile(queueItem);
@@ -2707,7 +2748,6 @@ async function processUploadQueue() {
       console.error(`Failed to upload: ${queueItem.newName}`, error);
     }
     
-    // 3-5 second delay between uploads
     if (uploadQueue.length > 0) {
       const delay = 3000 + Math.random() * 2000;
       await new Promise(resolve => setTimeout(resolve, delay));
@@ -2715,6 +2755,7 @@ async function processUploadQueue() {
   }
   
   isUploadProcessing = false;
+  updateUploadQueueDisplay(); // Add this line
 }
 
 async function uploadSingleFile(queueItem) {
